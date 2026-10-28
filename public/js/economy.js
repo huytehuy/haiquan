@@ -35,10 +35,28 @@ export function familyStatus(m) {
   return 'Khỏe';
 }
 
-/** Áp dụng chi tiêu đêm nay vào gia đình, trả về danh sách sự kiện (tin nhà). */
-export function applyNight(family, paid) {
+/** Các khoản chi của đêm nay theo hoàn cảnh nhà: tiền nhà thay đổi theo sự kiện, nhà ấm thì không cần sưởi. */
+export function expensesFor(g) {
+  return EXPENSES.filter((x) => !(x.key === 'heat' && g.warmHome)).map((x) => (x.key === 'rent' ? { ...x, price: g.rent } : x));
+}
+
+/**
+ * Áp dụng chi tiêu đêm nay vào gia đình, trả về danh sách sự kiện (tin nhà).
+ * home = { warmHome, blessing } — phúc lành từ chùa chặn được một lần ngã bệnh rồi hết.
+ */
+export function applyNight(family, paid, home = {}) {
   const events = [];
   const alive = family.filter((m) => m.alive);
+  const makeSick = (m, msg) => {
+    if (home.blessing) {
+      home.blessing = false;
+      events.push(`🙏 Nhờ phúc lành từ chùa, ${m.name} tai qua nạn khỏi.`);
+      return;
+    }
+    m.sick = 1;
+    events.push(msg);
+  };
+  if (home.warmHome) paid = { ...paid, heat: true };
 
   if (paid.medicine) {
     for (const m of alive) if (m.sick) { m.sick = 0; events.push(`${m.name} đã khỏi bệnh nhờ có thuốc.`); }
@@ -57,7 +75,7 @@ export function applyNight(family, paid) {
   else {
     for (const m of alive.filter((x) => x.alive)) {
       m.hunger++;
-      if (m.hunger >= 2 && !m.sick) { m.sick = 1; events.push(`${m.name} ngã bệnh vì đói.`); }
+      if (m.hunger >= 2 && !m.sick) makeSick(m, `${m.name} ngã bệnh vì đói.`);
     }
     events.push('Cả nhà đi ngủ với cái bụng đói.');
   }
@@ -65,7 +83,7 @@ export function applyNight(family, paid) {
   if (!paid.heat) {
     // người yếu nhất còn khỏe sẽ bị cảm
     const victim = [family[2], family[0], family[1]].find((m) => m.alive && !m.sick);
-    if (victim) { victim.sick = 1; events.push(`Nhà lạnh buốt — ${victim.name} bị cảm.`); }
+    if (victim) makeSick(victim, `Nhà lạnh buốt — ${victim.name} bị cảm.`);
   }
   if (!events.length) events.push('Cả nhà ấm no, mọi người đều khỏe.');
   return events;
@@ -87,9 +105,9 @@ export const newUpgrades = () => ({ scan: 0, question: 0, comparator: 0, coffee:
 // ---------------- Hối lộ & thanh tra nội bộ ----------------
 export const AUDIT_CHANCE = 0.3;
 
-/** Mỗi phong bì đã nhận có 30% bị phát hiện: phạt gấp đôi + 1 cảnh cáo. */
-export function audit(rng, bribes) {
-  return bribes.map((b) => ({ ...b, caught: chance(rng, AUDIT_CHANCE) }));
+/** Mỗi phong bì đã nhận có `p` (mặc định 30%) bị phát hiện: phạt gấp đôi + 1 cảnh cáo. */
+export function audit(rng, bribes, p = AUDIT_CHANCE) {
+  return bribes.map((b) => ({ ...b, caught: chance(rng, p) }));
 }
 
 // ---------------- Báo sáng ----------------

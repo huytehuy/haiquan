@@ -1,7 +1,7 @@
 [
   {
     "id": "npc_001",
-    "day": 1,
+    "minDay": 1,
     "crime": "CONTRABAND",
     "crime_detail": "Giấu 12 ống thuốc biến đổi gien trong hộp dụng cụ",
     "avatar": {
@@ -83,7 +83,7 @@
   },
   {
     "id": "npc_002",
-    "day": 1,
+    "minDay": 1,
     "crime": null,
     "avatar": {
       "skin": "#c68642",
@@ -166,7 +166,7 @@
   },
   {
     "id": "npc_007",
-    "day": 1,
+    "minDay": 1,
     "crime": null,
     "avatar": {
       "skin": "#c68642",
@@ -243,7 +243,7 @@
   },
   {
     "id": "npc_003",
-    "day": 2,
+    "minDay": 1,
     "crime": "FORGERY",
     "crime_detail": "Giấy phép nhập cảnh làm giả, khai sai năm sinh",
     "avatar": {
@@ -332,7 +332,7 @@
   },
   {
     "id": "npc_004",
-    "day": 2,
+    "minDay": 1,
     "crime": null,
     "avatar": {
       "skin": "#ffdbac",
@@ -415,7 +415,7 @@
   },
   {
     "id": "npc_006",
-    "day": 2,
+    "minDay": 1,
     "crime": null,
     "avatar": {
       "skin": "#ffdbac",
@@ -500,7 +500,7 @@
   },
   {
     "id": "npc_010",
-    "day": 2,
+    "minDay": 1,
     "crime": null,
     "avatar": {
       "skin": "#8d5524",
@@ -581,7 +581,7 @@
   },
   {
     "id": "npc_009",
-    "day": 2,
+    "minDay": 1,
     "crime": null,
     "avatar": {
       "skin": "#8d5524",
@@ -658,7 +658,7 @@
   },
   {
     "id": "npc_005",
-    "day": 3,
+    "minDay": 2,
     "crime": "WANTED",
     "crime_detail": "Đối tượng truy nã: cầm đầu đường dây đòi nợ thuê",
     "wanted": {
@@ -752,7 +752,7 @@
   },
   {
     "id": "npc_008",
-    "day": 3,
+    "minDay": 1,
     "crime": "CONTRABAND",
     "crime_detail": "Giấu 40 vi mạch thần kinh lậu trong hộp mỹ phẩm",
     "avatar": {
@@ -840,7 +840,7 @@
   },
   {
     "id": "npc_014",
-    "day": 3,
+    "minDay": 1,
     "crime": null,
     "avatar": {
       "skin": "#c68642",
@@ -915,7 +915,7 @@
   },
   {
     "id": "npc_011",
-    "day": 4,
+    "minDay": 2,
     "crime": "FORGERY",
     "crime_detail": "Giấy phép nhập cảnh làm giả (sai họ tên)",
     "avatar": {
@@ -1001,7 +1001,7 @@
   },
   {
     "id": "npc_012",
-    "day": 4,
+    "minDay": 1,
     "crime": null,
     "avatar": {
       "skin": "#e0ac69",
@@ -1076,7 +1076,7 @@
   },
   {
     "id": "npc_015",
-    "day": 4,
+    "minDay": 1,
     "crime": "CONTRABAND",
     "crime_detail": "Buôn mật gấu và vảy tê tê giấu dưới đáy thùng khô mực",
     "avatar": {
@@ -1161,7 +1161,7 @@
   },
   {
     "id": "npc_013",
-    "day": 5,
+    "minDay": 2,
     "crime": "CONTRABAND",
     "crime_detail": "Giấu linh kiện súng in 3D trong loa bluetooth",
     "avatar": {
@@ -1245,7 +1245,7 @@
   },
   {
     "id": "npc_016",
-    "day": 5,
+    "minDay": 1,
     "crime": null,
     "avatar": {
       "skin": "#ffdbac",
@@ -1332,7 +1332,7 @@
   },
   {
     "id": "npc_017",
-    "day": 5,
+    "minDay": 3,
     "crime": "WANTED",
     "crime_detail": "Đối tượng truy nã Châu Bá Long dùng danh tính giả",
     "wanted": {
@@ -1947,6 +1947,104 @@
       "ALLOW": "Chợ đen vi mạch thần kinh bùng nổ, thanh thiếu niên nhập viện vì cấy chip lậu",
       "ARREST": "Bắt \"người mẫu\" vận chuyển 120 vi mạch lậu",
       "DENY": "Người mẫu khả nghi bị trả về, vali đôi đáy chưa được mở"
+    }
+  },
+  {
+    "id": "npc_201",
+    "follow": {
+      "event": "stranger",
+      "choices": [
+        "take",
+        "report"
+      ],
+      "delay": 1,
+      "hiddenWhen": [
+        "take"
+      ]
+    },
+    "crime": "WANTED",
+    "crime_detail": "Đối tượng truy nã Hồ \"Bóng Ma\" Vĩnh — người trong tấm ảnh",
+    "wanted": {
+      "name": "Hồ Vĩnh",
+      "id_number": "NS-66013",
+      "charge": "Bắt cóc, tống tiền",
+      "note": "Tin báo từ thanh tra quầy 7."
+    },
+    "fingerprint": {
+      "name": "Hồ Vĩnh",
+      "record": "TRUY NÃ — bắt cóc, tống tiền"
+    },
+    "avatar": {
+      "skin": "#d4a373",
+      "hair": "hood",
+      "hairColor": "#1b1b1b",
+      "clothes": "#2d3436",
+      "acc": [
+        "scar"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Hồ Vĩnh",
+        "sex": "Nam",
+        "dob": "1988-12-03",
+        "id_number": "NS-66013",
+        "expiry_date": "2029-03-03",
+        "origin": "Khu Cảng, Neo-Saigon"
+      },
+      "entry_permit": {
+        "name": "Hồ Vĩnh",
+        "dob": "1988-12-03",
+        "id_number": "NS-66013",
+        "purpose": "Du lịch",
+        "duration_days": 3
+      },
+      "customs": {
+        "name": "Hồ Vĩnh",
+        "items": [
+          {
+            "name": "Ba lô",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Điện thoại vệ tinh",
+            "category": "Điện tử"
+          }
+        ],
+        "cash": 600
+      }
+    },
+    "scan": [
+      {
+        "item": "Ba lô",
+        "reveal": "Quần áo, dây thừng, băng keo"
+      },
+      {
+        "item": "Điện thoại vệ tinh",
+        "reveal": "Thiết bị điện tử thông thường"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Ít nói, ánh mắt dò xét, luôn liếc về phía camera, nói chuyện như thể hai bên đã có thỏa thuận",
+      "temper": "calm",
+      "true_story": "Kẻ bắt cóc tống tiền đang bị truy nã, biệt danh \"Bóng Ma\". Đồng bọn đã mang $400 đến nhà thanh tra quầy 7 đêm qua để mua đường cho hắn qua.",
+      "alibi": "Đi du lịch vài ngày",
+      "triggers": {
+        "if_threatened": "Nhếch mép: \"Thanh tra quên lời hứa đêm qua rồi à? Tiền đã cầm rồi đấy.\"",
+        "if_asked_about_rope": "Nói là đồ đi cắm trại"
+      }
+    },
+    "lines": {
+      "greeting": "Chào thanh tra. Chắc anh... đã được báo trước về tôi rồi nhỉ?",
+      "luggage": "Đồ cắm trại thôi. Anh biết rồi mà.",
+      "threat": [
+        "Thanh tra quên lời hứa đêm qua rồi à? Tiền đã cầm rồi đấy."
+      ]
+    },
+    "news": {
+      "ALLOW": "Một doanh nhân bị bắt cóc giữa Quận 1 — kẻ tình nghi vừa qua cửa khẩu hôm trước",
+      "ARREST": "Bắt giữ kẻ bắt cóc \"Bóng Ma\" ngay tại cửa khẩu",
+      "DENY": "Kẻ khả nghi bị trả về ở cửa khẩu, đồng bọn nổi giận"
     }
   }
 ]

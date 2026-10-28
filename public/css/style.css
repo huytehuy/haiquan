@@ -477,6 +477,48 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .end .epilogue { line-height: 1.6; color: #c9d4df; margin: 0 0 16px; text-align: left; }
 .end h3 { text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 18px 0 6px; }
 
+/* ---------- Ngày đặc biệt, cấp bậc, kỹ năng, sự kiện đêm ---------- */
+.mod-banner {
+  display: flex; gap: 12px; align-items: center;
+  background: linear-gradient(90deg, #3a1d00, #1a1206); border: 1px solid var(--amber); border-radius: 10px;
+  padding: 10px 12px; margin-bottom: 12px; animation: pop .4s cubic-bezier(.3,1.6,.6,1);
+}
+.mod-banner .mod-ico { font-size: 30px; }
+.mod-banner b { display: block; color: var(--amber); font-size: 14px; letter-spacing: .5px; }
+.mod-banner span { font-size: 13px; color: #e8d9b8; line-height: 1.45; }
+.mod-chip { color: var(--amber); font-size: 14px; margin-left: 4px; }
+.rank-line { font-size: 13px; color: #cdb89c; margin: 0 0 6px; }
+.tab { position: relative; }
+.tab-alert {
+  position: absolute; top: -5px; right: -4px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--red); color: #fff; font-size: 11px; line-height: 16px; text-align: center;
+  animation: blink 1s steps(2) infinite;
+}
+.night-note { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+.skills { display: grid; gap: 8px; }
+.skill {
+  display: grid; grid-template-columns: 36px 1fr; grid-template-rows: auto auto; column-gap: 10px; text-align: left;
+  background: linear-gradient(135deg, #1b2735, #121821); border: 1px solid #f2b84b66; border-radius: 12px; padding: 10px 12px;
+  transition: transform .1s, border-color .15s;
+}
+.skill:hover { border-color: var(--amber); transform: translateY(-1px); }
+.skill .sk-ico { grid-row: span 2; font-size: 26px; align-self: center; }
+.skill b { color: var(--amber); font-size: 14px; }
+.skill small { color: #c9d4df; font-size: 12.5px; line-height: 1.4; }
+.event-card { background: #161320; border: 1px solid #8e7cc366; border-radius: 12px; padding: 12px; font-size: 14px; line-height: 1.5; }
+.event-card.done { border-color: var(--line); background: var(--panel); }
+.ev-head { display: flex; gap: 12px; align-items: flex-start; }
+.ev-head p { margin: 4px 0 0; color: #d4cde6; }
+.ev-title { color: #c9b6ff; font-size: 15px; }
+.ev-photo { flex: 0 0 64px; height: 76px; background: #d9cfc0; border: 3px solid #fff; transform: rotate(-4deg); image-rendering: pixelated; box-shadow: 0 4px 10px #0008; }
+.ev-photo svg { width: 100%; height: 100%; }
+.ev-choices { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ev-btn { flex: 1 1 auto; background: #2d2547; color: #fff; padding: 9px 10px; font-size: 13.5px; }
+.ev-btn:hover:not(:disabled) { background: #3e3363; }
+.ev-result { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #ffffff22; color: #e6edf3; }
+.epi-notes { list-style: none; padding: 0; margin: 0 0 14px; text-align: left; font-size: 13.5px; line-height: 1.5; color: #c9d4df; }
+.epi-notes li { padding: 4px 0; }
+
 /* ---------- Phong bì hối lộ ---------- */
 .bribe {
   position: absolute; z-index: 6; left: 50%; bottom: 10px; transform: translateX(-50%);

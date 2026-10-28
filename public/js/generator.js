@@ -274,22 +274,57 @@ function makeFiller(rng, idx, ctx, violation, avoidAvatars) {
   };
 }
 
-/** Nhân vật quay lại: xuất hiện `delay` ngày sau khi người chơi ra quyết định khớp `decisions` với nhân vật `after`. */
-function followUpDue(n, day, history) {
-  const h = n.follow && history[n.follow.after];
-  return !!h && n.follow.decisions.includes(h.decision) && h.day + n.follow.delay === day;
+/**
+ * Xếp lịch cho nhân vật viết tay: mỗi ván một thứ tự khác, tôn trọng minDay. Trả về { npcId: day }.
+ * Gọi lại với cùng rng-seed sẽ ra cùng lịch (dùng khi "Tiếp tục").
+ */
+export function planSchedule(allNpcs, rng, totalDays) {
+  const capacity = Array.from({ length: totalDays }, (_, i) => (i === 0 ? 3 : 4));
+  // xếp nhân vật kén ngày (minDay cao) trước để chắc chắn còn chỗ
+  const fixed = shuffle(rng, allNpcs.filter((n) => !n.follow)).sort((a, b) => b.minDay - a.minDay);
+  const plan = {};
+  for (const n of fixed) {
+    // chọn ngẫu nhiên trong các ngày còn trống nhiều chỗ nhất → lịch ngẫu nhiên nhưng đều
+    let best = 0;
+    for (let d = n.minDay; d <= totalDays; d++) best = Math.max(best, capacity[d - 1]);
+    const days = [];
+    for (let d = n.minDay; d <= totalDays; d++) if (best > 0 && capacity[d - 1] === best) days.push(d);
+    const day = days.length ? pick(rng, days) : randInt(rng, n.minDay, totalDays);
+    if (capacity[day - 1] > 0) capacity[day - 1]--;
+    plan[n.id] = day;
+  }
+  return plan;
 }
 
-/** Sinh toàn bộ dữ liệu của một ngày: khách + lệnh truy nã. history = { npcId: { decision, day } }. */
-export function buildRoster(day, rng, ctx, allNpcs, history = {}) {
-  const scheduled = allNpcs.filter((n) => n.day === day || followUpDue(n, day, history)).map(clone);
+/**
+ * Nhân vật quay lại, `delay` ngày sau khi:
+ * - follow.after: người chơi ra quyết định nằm trong `decisions` với nhân vật đó; hoặc
+ * - follow.event: người chơi chọn một trong `choices` ở sự kiện ban đêm đó.
+ */
+function followUpDue(n, day, history, flags) {
+  if (!n.follow) return false;
+  const h = n.follow.event ? flags[n.follow.event] : history[n.follow.after];
+  if (!h) return false;
+  const picked = n.follow.event ? n.follow.choices.includes(h.choice) : n.follow.decisions.includes(h.decision);
+  return picked && h.day + n.follow.delay === day;
+}
+
+/**
+ * Sinh toàn bộ dữ liệu của một ngày: khách + lệnh truy nã.
+ * schedule = { npcId: day } từ planSchedule(); history = { npcId: { decision, day } }; flags = lựa chọn sự kiện đêm.
+ * ctx.extraVisitors: khách thêm cho ngày đặc biệt.
+ */
+export function buildRoster(day, rng, ctx, allNpcs, schedule, history = {}, flags = {}) {
+  const scheduled = allNpcs.filter((n) => schedule[n.id] === day || followUpDue(n, day, history, flags)).map(clone);
   // Hàng chờ dài hơn sức xử lý trong một ca — làm nhanh thì kiếm nhiều hơn
-  const total = day === 1 ? 6 : randInt(rng, 7, 9);
+  const total = (day === 1 ? 6 : randInt(rng, 7, 9)) + (ctx.extraVisitors || 0);
   const fillerCount = Math.max(total - scheduled.length, 2);
 
+  // Kẻ đã "mua đường" (nhận tiền ở sự kiện đêm) thì không có tên trên lệnh truy nã
+  const onBulletin = (n) => !(n.follow?.hiddenWhen || []).includes(flags[n.follow?.event]?.choice);
   const wanted = scheduled
-    .filter((n) => n.crime === 'WANTED')
-    .map((n) => ({ ...n.wanted, avatar: n.avatar, real: true }));
+    .filter((n) => n.crime === 'WANTED' && onBulletin(n))
+    .map((n) => ({ ...n.wanted, avatar: n.avatar, npcId: n.id }));
   if (day >= 3) {
     wanted.push({
       name: pick(rng, GANGSTERS), id_number: makeId(rng, pick(rng, DOMESTIC_REGIONS)),

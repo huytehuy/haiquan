@@ -33,20 +33,10 @@ const RULE_BUILDERS = {
   CASH_LIMIT: (rng) => ({ type: 'CASH_LIMIT', limit: pick(rng, [1000, 2000, 2500]) }),
 };
 
-/** Sinh 2–3 quy tắc cho ngày. Ngày 1 & 2 cố định một phần để người chơi làm quen. */
+/** Sinh quy tắc ngẫu nhiên cho ngày: 2 quy tắc ở ngày 1–2 để làm quen, 3 quy tắc từ ngày 3. */
 export function makeDayRules(day, rng) {
   const used = { cats: [] };
-  if (day === 1) {
-    return [
-      { type: 'BAN_CATEGORY', category: 'Hóa chất/Sinh học' },
-      { type: 'TOURISM_MAX', max: 14 },
-    ];
-  }
-  if (day === 2) {
-    const second = pick(rng, ['BAN_CATEGORY', 'TOURISM_MAX', 'CASH_LIMIT']);
-    return [{ type: 'WORK_PERMIT' }, RULE_BUILDERS[second](rng, used)];
-  }
-  const types = shuffle(rng, Object.keys(RULE_BUILDERS)).slice(0, 3);
+  const types = shuffle(rng, Object.keys(RULE_BUILDERS)).slice(0, day <= 2 ? 2 : 3);
   return types.map((t) => RULE_BUILDERS[t](rng, used));
 }
 
@@ -74,7 +64,8 @@ const FIELD_LABEL = { name: 'Họ tên', id_number: 'Số hộ chiếu', dob: 'N
 const DOC_LABEL = { entry_permit: 'Giấy phép nhập cảnh', work_permit: 'Giấy phép lao động', customs: 'Tờ khai hải quan' };
 
 /**
- * Trả về danh sách vi phạm của một khách: [{ sev: 'DENY'|'ARREST', text, hidden? }].
+ * Trả về danh sách vi phạm của một khách: [{ sev: 'DENY'|'ARREST', text, doc }].
+ * doc = giấy tờ chứa vi phạm (tab giao diện); null = vi phạm giấu kín, chỉ lộ qua soi chiếu/thẩm vấn.
  * ctx = { date, rules }
  */
 export function checkRules(npc, ctx) {
@@ -83,40 +74,40 @@ export function checkRules(npc, ctx) {
   const v = [];
 
   // Luật thường trực
-  if (p.expiry_date <= ctx.date) v.push({ sev: 'DENY', text: `Hộ chiếu hết hạn (${p.expiry_date})` });
+  if (p.expiry_date <= ctx.date) v.push({ sev: 'DENY', doc: 'passport', text: `Hộ chiếu hết hạn (${p.expiry_date})` });
 
   for (const doc of ['entry_permit', 'work_permit', 'customs']) {
     if (!d[doc]) continue;
     for (const f of ['name', 'id_number', 'dob']) {
       if (d[doc][f] === undefined) continue;
       if (d[doc][f] !== p[f]) {
-        v.push({ sev: 'ARREST', text: `Giấy tờ giả: ${FIELD_LABEL[f]} ở ${DOC_LABEL[doc]} (${d[doc][f]}) khác hộ chiếu (${p[f]})` });
+        v.push({ sev: 'ARREST', doc, text: `Giấy tờ giả: ${FIELD_LABEL[f]} ở ${DOC_LABEL[doc]} (${d[doc][f]}) khác hộ chiếu (${p[f]})` });
       }
     }
   }
 
-  if (npc.crime === 'WANTED') v.push({ sev: 'ARREST', text: npc.crime_detail || 'Đối tượng truy nã' });
-  if (npc.crime === 'CONTRABAND') v.push({ sev: 'ARREST', text: `Buôn lậu: ${npc.crime_detail}` });
+  if (npc.crime === 'WANTED') v.push({ sev: 'ARREST', doc: 'rules', text: npc.crime_detail || 'Đối tượng truy nã' });
+  if (npc.crime === 'CONTRABAND') v.push({ sev: 'ARREST', doc: null, text: `Buôn lậu: ${npc.crime_detail}` });
 
   // Quy tắc của ngày
   const purpose = d.entry_permit?.purpose;
   for (const r of ctx.rules) {
     if (r.type === 'BAN_CATEGORY') {
       const hit = d.customs.items.filter((i) => i.category === r.category);
-      if (hit.length) v.push({ sev: 'DENY', text: `Mang vật phẩm bị cấm nhóm "${r.category}": ${hit.map((i) => i.name).join(', ')}` });
+      if (hit.length) v.push({ sev: 'DENY', doc: 'customs', text: `Mang vật phẩm bị cấm nhóm "${r.category}": ${hit.map((i) => i.name).join(', ')}` });
     } else if (r.type === 'TOURISM_MAX') {
       if (purpose === 'Du lịch' && d.entry_permit.duration_days > r.max)
-        v.push({ sev: 'DENY', text: `Du lịch ${d.entry_permit.duration_days} ngày, vượt quá ${r.max} ngày` });
+        v.push({ sev: 'DENY', doc: 'entry_permit', text: `Du lịch ${d.entry_permit.duration_days} ngày, vượt quá ${r.max} ngày` });
     } else if (r.type === 'WORK_PERMIT') {
       if (WORK_PURPOSES.includes(purpose)) {
-        if (!d.work_permit) v.push({ sev: 'DENY', text: `Mục đích "${purpose}" nhưng không có Giấy phép lao động` });
+        if (!d.work_permit) v.push({ sev: 'DENY', doc: 'entry_permit', text: `Mục đích "${purpose}" nhưng không có Giấy phép lao động` });
         else if (d.work_permit.valid_until <= ctx.date)
-          v.push({ sev: 'DENY', text: `Giấy phép lao động hết hạn (${d.work_permit.valid_until})` });
+          v.push({ sev: 'DENY', doc: 'work_permit', text: `Giấy phép lao động hết hạn (${d.work_permit.valid_until})` });
       }
     } else if (r.type === 'BAN_ORIGIN') {
-      if (p.origin.includes(r.region)) v.push({ sev: 'DENY', text: `Đến từ khu vực đang tạm dừng nhập cảnh: ${r.region}` });
+      if (p.origin.includes(r.region)) v.push({ sev: 'DENY', doc: 'passport', text: `Đến từ khu vực đang tạm dừng nhập cảnh: ${r.region}` });
     } else if (r.type === 'CASH_LIMIT') {
-      if (d.customs.cash > r.limit) v.push({ sev: 'DENY', text: `Mang $${d.customs.cash} tiền mặt, vượt mức $${r.limit}` });
+      if (d.customs.cash > r.limit) v.push({ sev: 'DENY', doc: 'customs', text: `Mang ${d.customs.cash} tiền mặt, vượt mức $${r.limit}` });
     }
   }
   return v;

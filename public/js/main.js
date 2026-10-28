@@ -2,14 +2,15 @@
 import { $, $$, esc, sleep, money, store, mulberry32, pick } from './util.js';
 import * as R from './rules.js';
 import * as E from './economy.js';
-import { buildRoster, randomAvatar } from './generator.js';
+import { buildRoster, planSchedule, randomAvatar } from './generator.js';
 import { renderAvatar } from './avatar.js';
 import { renderDoc, renderRules, renderXray, renderFingerprint, DOC_TABS } from './docs.js';
 import { interrogate, checkAIStatus, detectIntent } from './ai.js';
-import { measureStress, polygraphSvg, fates, chooseEnding } from './story.js';
+import { measureStress, polygraphSvg, fates, chooseEnding, epilogueNotes } from './story.js';
+import * as N from './nights.js';
 import { sfx, toggleMute, isMuted, unlockAudio } from './audio.js';
 
-const SAVE_KEY = 'hq_save_v3';
+const SAVE_KEY = 'hq_save_v4';
 const QUICK_QUESTIONS = ['Mục đích chuyến đi là gì?', 'Ở lại bao lâu?', 'Mở hành lý ra kiểm tra!', 'Nói thật đi, không tôi bắt giữ!'];
 const TAB_COLORS = { passport: '#e9dcc0', entry_permit: '#dfeaf3', customs: '#f3ead3', work_permit: '#e0f0e0', rules: '#fbf7ec' };
 const BRIBE_HINT = /\$\s?\d+|phong bì|cà phê|hối lộ|đút lót|bồi dưỡng|chút tiền|ít tiền/i;
@@ -17,9 +18,9 @@ const BRIBE_HINT = /\$\s?\d+|phong bì|cà phê|hối lộ|đút lót|bồi dư�
 const S = {
   npcs: [],
   ai: false,
-  game: null, // { seed, day, money, mistakes, correct, total, arrests, streak, bribes, upgrades, family, morning, decisions, stats }
-  day: null, // { date, rules, wanted, visitors, index, results, scans, prints, clock, shiftEnd, overtime, bribes }
-  night: null, // { paid, audit, missed }
+  game: null, // { seed, day, money, mistakes, ..., rep, rank, skills, flags, eventsSeen, rent, warmHome, blessing }
+  day: null, // { date, rules, wanted, visitors, index, results, scans, prints, clock, shiftEnd, overtime, bribes, mod }
+  night: null, // { paid, audit, missed, deal, rankUp, event, eventResult }
   npc: null,
   tab: 'passport',
   busy: false,
@@ -28,6 +29,8 @@ const S = {
 
 const show = (id) => $$('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
 const dayCtx = () => ({ date: S.day.date, rules: S.day.rules, wanted: S.day.wanted });
+const hasSkill = (k) => S.game.skills.includes(k);
+const mod = () => S.day?.mod || {};
 
 // ---------------------------------------------------------------- Khởi động
 
@@ -128,7 +131,11 @@ function bindEvents() {
   });
   $('#summary-content').addEventListener('click', (e) => {
     const b = e.target.closest('[data-buy]');
-    if (b) buy(b.dataset.buy);
+    if (b) return buy(b.dataset.buy);
+    const sk = e.target.closest('[data-skill]');
+    if (sk) return chooseSkill(sk.dataset.skill);
+    const ch = e.target.closest('[data-choice]');
+    if (ch && !ch.disabled) chooseEvent(ch.dataset.choice);
   });
 }
 
@@ -147,6 +154,9 @@ function newGame() {
     streak: 0, bribes: 0, upgrades: E.newUpgrades(), family: E.newFamily(), morning: null,
     decisions: {}, // npcId -> { decision, day } cho nhân vật viết tay — quyết định ai quay lại
     stats: { caught: 0, escaped: 0, wrongArrest: 0 },
+    rep: 0, rank: 0, skills: [], // uy tín → cấp bậc → kỹ năng
+    flags: {}, eventsSeen: [], // lựa chọn ở sự kiện ban đêm: key -> { choice, day }
+    rent: E.EXPENSES[0].price, warmHome: false, blessing: false,
   };
   startDay();
 }
@@ -156,26 +166,36 @@ function startDay() {
   const rng = mulberry32(g.seed + g.day * 7919);
   const date = R.dayDate(g.day);
   const rules = R.makeDayRules(g.day, rng);
-  const { visitors, wanted } = buildRoster(g.day, rng, { date, rules }, S.npcs, g.decisions);
+  // Lịch nhân vật cố định theo seed của ván — mỗi ván mới một thứ tự, "Tiếp tục" giữ nguyên lịch
+  const schedule = planSchedule(S.npcs, mulberry32(g.seed ^ 0x5bd1e995), R.TOTAL_DAYS);
+  const modKey = N.planDayMods(mulberry32(g.seed ^ 0x27d4eb2f), R.TOTAL_DAYS)[g.day - 1];
+  const m = modKey ? { key: modKey, ...N.DAY_MODS[modKey] } : null;
+  const { visitors, wanted } = buildRoster(g.day, rng, { date, rules, extraVisitors: m?.extraVisitors }, S.npcs, schedule, g.decisions, g.flags);
   S.day = {
-    date, rules, wanted, visitors, index: 0, results: [], bribes: [],
-    scans: R.SCANS_PER_DAY + g.upgrades.scan,
-    prints: R.PRINTS_PER_DAY + g.upgrades.fingerprint,
+    date, rules, wanted, visitors, index: 0, results: [], bribes: [], mod: m,
+    scans: m?.noScan ? 0 : m?.unlimitedScan ? 99 : R.SCANS_PER_DAY + g.upgrades.scan,
+    prints: m?.noPrint ? 0 : R.PRINTS_PER_DAY + g.upgrades.fingerprint,
     clock: E.SHIFT_START,
-    shiftEnd: E.SHIFT_END + (g.upgrades.coffee ? E.COFFEE_MINUTES : 0),
+    shiftEnd: (m?.shiftEnd || E.SHIFT_END) + (g.upgrades.coffee ? E.COFFEE_MINUTES : 0),
     overtime: false,
   };
   store(SAVE_KEY, g);
 
-  const realMin = Math.round((S.day.shiftEnd - S.day.clock) / E.GAME_MIN_PER_SEC / 60);
+  const realMin = Math.round((S.day.shiftEnd - S.day.clock) / E.GAME_MIN_PER_SEC / 60 / (hasSkill('steel') ? 0.75 : 1));
+  const rank = N.RANKS[g.rank];
+  const next = N.nextRank(g.rank);
+  const qPer = R.QUESTIONS_PER_VISITOR + g.upgrades.question + (hasSkill('interrogator') ? 1 : 0);
   $('#memo-content').innerHTML = `
     ${newspaperHtml(g, date, rules)}
+    ${m ? `<div class="mod-banner"><span class="mod-ico">${m.icon}</span><div><b>NGÀY ĐẶC BIỆT: ${esc(m.name)}</b><span>${esc(m.desc)}</span></div></div>` : ''}
     <div class="memo-intro">NGÀY ${g.day}/${R.TOTAL_DAYS} · ${date}</div>
+    <div class="rank-line">🎖 ${rank.name} · Uy tín ${g.rep}${next ? `/${next.rep}` : ''} · Lương $${rank.pay}/khách${g.skills.length ? ` · ${g.skills.map((k) => N.skillByKey[k].icon).join(' ')}` : ''}</div>
     <p class="memo-sub">Hàng chờ: <b>${visitors.length} khách</b> · Ca trực <b>${E.fmtClock(S.day.clock)}–${E.fmtClock(S.day.shiftEnd)}</b> (≈${realMin} phút thật, đồng hồ dừng khi chờ khách trả lời).
       Hết giờ thì khách còn lại phải về — làm nhanh mới đủ tiền nuôi gia đình.<br>
-      Máy soi: <b>${S.day.scans} lượt</b> · Vân tay: <b>${S.day.prints} lượt</b> · Hỏi vặn: <b>${R.QUESTIONS_PER_VISITOR + g.upgrades.question} câu/khách</b>${g.upgrades.polygraph ? ' · Máy phát hiện nói dối: <b>bật</b>' : ''}.
-      Đúng +$${R.PAY_CORRECT} (bắt giữ đúng +$${R.ARREST_BONUS}, chuỗi ${R.STREAK_MIN}+ đúng liên tiếp +$${R.STREAK_BONUS}). Sai −$${R.FINE_WRONG} và 1 cảnh cáo.</p>
+      Máy soi: <b>${S.day.scans >= 99 ? 'không giới hạn' : S.day.scans + ' lượt'}</b> · Vân tay: <b>${S.day.prints} lượt</b> · Hỏi vặn: <b>${qPer} câu/khách</b>${g.upgrades.polygraph && !m?.noGadgets ? ' · Máy phát hiện nói dối: <b>bật</b>' : ''}.
+      Bắt giữ đúng +$${R.ARREST_BONUS}, chuỗi ${R.STREAK_MIN}+ đúng liên tiếp +$${R.STREAK_BONUS * (hasSkill('momentum') ? 2 : 1)}. Sai −$${R.FINE_WRONG} và 1 cảnh cáo. Làm đúng để tăng uy tín và thăng cấp.</p>
     ${renderRules(dayCtx(), { memo: true })}`;
+  $('.cam-label').innerHTML = `CAM-01 · QUẦY 7${m ? ` <span class="mod-chip">${m.icon} ${esc(m.name)}</span>` : ''} <span class="rec">● REC</span>`;
   $('#screen-memo .scroll-area').scrollTop = 0;
   show('screen-memo');
   sfx.paper();
@@ -220,7 +240,7 @@ function tickClock() {
   const d = S.day;
   if (!d || !S.npc || S.busy || d.overtime || document.hidden) return;
   if (!$('#screen-booth').classList.contains('active') || !$('#result-sheet').hidden) return;
-  d.clock = Math.min(d.clock + E.GAME_MIN_PER_SEC / 4, d.shiftEnd);
+  d.clock = Math.min(d.clock + (E.GAME_MIN_PER_SEC / 4) * (hasSkill('steel') ? 0.75 : 1), d.shiftEnd);
   if (d.clock >= d.shiftEnd) {
     d.overtime = true;
     sfx.bell();
@@ -261,11 +281,16 @@ async function nextVisitor() {
   if (d.index >= d.visitors.length) return endDay();
 
   const npc = d.visitors[d.index];
-  const qMax = R.QUESTIONS_PER_VISITOR + g.upgrades.question;
+  const qMax = R.QUESTIONS_PER_VISITOR + g.upgrades.question + (hasSkill('interrogator') ? 1 : 0);
+  const gadgets = !mod().noGadgets;
   Object.assign(npc, {
     convo: [], notes: [], pressure: 0, qLeft: qMax, qMax, scanned: null, printed: false, bribeState: null, marks: new Set(), _date: d.date,
-    flags: g.upgrades.comparator ? R.flaggedFields(npc, d.date) : new Set(),
+    flags: g.upgrades.comparator && gadgets ? R.flaggedFields(npc, d.date) : new Set(),
+    slippery: hasSkill('silver'),
   });
+  if (npc.slippery) {
+    npc.notes.push('Bạn đang cực kỳ căng thẳng trước viên thanh tra sắc sảo này. Nếu bạn có giấu điều gì, hãy vô tình để lộ một chi tiết mâu thuẫn hoặc lỡ lời.');
+  }
   S.npc = npc;
   S.tab = 'passport';
   S.busy = true;
@@ -288,7 +313,7 @@ async function nextVisitor() {
   plate.textContent = npc.follow ? `⚠ KHÁCH QUEN #${d.index + 1}` : `KHÁCH #${d.index + 1}`;
   plate.classList.toggle('regular', !!npc.follow);
   const pg = $('#polygraph');
-  pg.hidden = !g.upgrades.polygraph;
+  pg.hidden = !g.upgrades.polygraph || !gadgets;
   pg.className = 'polygraph';
   $('#pg-bpm').textContent = '--';
   $('#pg-wave').innerHTML = polygraphSvg(15);
@@ -303,6 +328,24 @@ async function nextVisitor() {
   await say(npc.lines?.greeting || 'Chào thanh tra. Giấy tờ của tôi đây.');
   S.busy = false;
   setControls();
+  skillAlerts(npc);
+}
+
+/** Cảnh báo từ kỹ năng khi khách vừa vào: camera nhận diện, chó nghiệp vụ. */
+function skillAlerts(npc) {
+  if (hasSkill('face') && S.day.wanted.some((w) => w.npcId === npc.id)) {
+    sfx.alarm();
+    flash('📸 CAMERA: KHUÔN MẶT KHỚP LỆNH TRUY NÃ!', 3500);
+    return;
+  }
+  if (hasSkill('k9')) {
+    const smuggler = npc.scan.some((s) => s.contraband);
+    // chó giỏi nhưng không hoàn hảo: bỏ sót 20%, sủa nhầm 8%
+    if (smuggler ? Math.random() < 0.8 : Math.random() < 0.08) {
+      sfx.beep();
+      flash('🐕 GÂU! GÂU! Chó nghiệp vụ đánh hơi thấy gì đó…', 3000);
+    }
+  }
 }
 
 function setEmotion(e) {
@@ -328,13 +371,19 @@ async function say(text, source) {
 
 function renderTabs() {
   const npc = S.npc;
+  // Mắt diều hâu: đánh dấu tab chứa vi phạm nhìn thấy được trên giấy tờ
+  // (truy nã chỉ tính khi người này thật sự có tên trên lệnh truy nã hôm nay)
+  const onBulletin = S.day.wanted.some((w) => w.npcId === npc.id);
+  const suspicious = hasSkill('eagle')
+    ? new Set(R.checkRules(npc, dayCtx()).map((v) => v.doc).filter((doc) => doc && (doc !== 'rules' || onBulletin)))
+    : new Set();
   $('#tabs').innerHTML = DOC_TABS.filter((t) => t.key === 'rules' || npc.documents[t.key])
-    .map((t) => `<button class="tab${t.key === S.tab ? ' active' : ''}" data-tab="${t.key}" role="tab" style="--tab-color:${TAB_COLORS[t.key]}">${t.label}</button>`)
+    .map((t) => `<button class="tab${t.key === S.tab ? ' active' : ''}" data-tab="${t.key}" role="tab" style="--tab-color:${TAB_COLORS[t.key]}">${t.label}${suspicious.has(t.key) ? '<b class="tab-alert">!</b>' : ''}</button>`)
     .join('');
 }
 
 function renderDocView() {
-  const hint = S.game.upgrades.comparator ? 'Ô viền đỏ = máy đối chiếu báo lệch · ' : '';
+  const hint = S.game.upgrades.comparator && !mod().noGadgets ? 'Ô viền đỏ = máy đối chiếu báo lệch · ' : '';
   $('#doc-view').innerHTML =
     renderDoc(S.tab, S.npc, dayCtx(), S.npc.marks, S.npc.flags) +
     `<p class="zoom-hint">${hint}Chạm ô thông tin để đánh dấu · chạm giấy để phóng to</p>`;
@@ -361,7 +410,7 @@ async function ask(text) {
   const res = await interrogate(npc, text, { date: S.day.date, aiOnline: S.ai });
   npc.convo.push({ q: text, a: res.dialogue, emotion: res.emotion });
   setEmotion(res.emotion);
-  if (S.game.upgrades.polygraph) showPolygraph(measureStress(npc, text));
+  if (S.game.upgrades.polygraph && !mod().noGadgets) showPolygraph(measureStress(npc, text));
   await say(res.dialogue, res.source);
   S.busy = false;
   setControls();
@@ -458,12 +507,15 @@ function resolveBribe(take) {
   $('#bribe').hidden = true;
   if (take) {
     npc.bribeState = 'taken';
-    S.game.money += npc.bribe;
+    // Bắt tay với quầy 6: chia đôi phong bì, đổi lại được che thanh tra nội bộ
+    const partner = S.game.flags.colleague?.choice === 'join';
+    const amount = partner ? Math.round(npc.bribe / 2) : npc.bribe;
+    S.game.money += amount;
     S.game.bribes++;
-    S.day.bribes.push({ name: npc.documents.passport.name, amount: npc.bribe });
+    S.day.bribes.push({ name: npc.documents.passport.name, amount, covered: partner });
     npc.notes.push(`Thanh tra đã lén nhận phong bì $${npc.bribe} của bạn. Bạn tin là sẽ được cho qua.`);
     sfx.coin();
-    flash(`💵 +$${npc.bribe} (bẩn)`);
+    flash(`💵 +$${amount} (bẩn${partner ? ', đã chia quầy 6' : ''})`);
     updateHud();
   } else {
     npc.bribeState = 'refused';
@@ -495,7 +547,16 @@ async function decide(v) {
   setControls();
 
   const violations = R.checkRules(npc, dayCtx());
-  const result = R.evaluateDecision(v, violations);
+  let result = R.evaluateDecision(v, violations);
+  // Báo động khủng bố: cho qua mà chưa soi là vi phạm lệnh, dù hồ sơ có sạch
+  if (mod().mustScan && v === 'ALLOW' && !npc.scanned) {
+    result = { ...result, code: 'WRONG_PROTOCOL', correct: false, pay: 0, bonus: 0, fine: R.FINE_WRONG, title: 'Vi phạm lệnh báo động: cho qua khi chưa soi X-quang!' };
+  }
+  // Lương theo cấp bậc × hệ số ngày đặc biệt
+  const g0 = S.game;
+  if (result.pay) result.pay = Math.round(N.RANKS[g0.rank].pay * (mod().payMult || 1));
+  if (result.bonus) result.bonus = Math.round(result.bonus * (mod().payMult || 1));
+  if (result.fine) result.fine = Math.round(result.fine * (mod().fineMult || 1));
 
   // Đóng dấu
   const [label, cls] = STAMP[v];
@@ -528,11 +589,14 @@ async function decide(v) {
   if (result.correct) {
     g.correct++;
     g.streak++;
-    if (g.streak >= R.STREAK_MIN) result.streakBonus = R.STREAK_BONUS;
+    if (g.streak >= R.STREAK_MIN) result.streakBonus = R.STREAK_BONUS * (hasSkill('momentum') ? 2 : 1);
+    result.rep = N.REP.correct + (result.code === 'CORRECT_ARREST' ? N.REP.arrest : 0);
   } else {
     g.mistakes++;
     g.streak = 0;
+    result.rep = N.REP.wrong;
   }
+  g.rep = Math.max(0, g.rep + result.rep);
   if (result.code === 'CORRECT_ARREST') g.arrests++;
   if (result.expected === 'ARREST' && v === 'ARREST') g.stats.caught++;
   if (result.expected === 'ARREST' && v === 'ALLOW') g.stats.escaped++;
@@ -543,7 +607,7 @@ async function decide(v) {
   S.day.results.push({ npc, decision: v, result, delta });
   updateHud();
   result.correct ? sfx.coin() : sfx.error();
-  if (result.streakBonus) flash(`🔥 Chuỗi ${g.streak} đúng · +$${R.STREAK_BONUS}`);
+  if (result.streakBonus) flash(`🔥 Chuỗi ${g.streak} đúng · +$${result.streakBonus}`);
   showResultSheet(npc, result);
 }
 
@@ -559,6 +623,7 @@ function showResultSheet(npc, result) {
     result.bonus ? `<span class="plus">+$${result.bonus} thưởng bắt giữ</span>` : '',
     result.streakBonus ? `<span class="plus">+$${result.streakBonus} chuỗi ${g.streak}🔥</span>` : '',
     result.fine ? `<span class="minus">−$${result.fine} phạt · cảnh cáo ${g.mistakes}/${R.MAX_MISTAKES}</span>` : '',
+    result.rep ? `<span class="${result.rep > 0 ? 'plus' : 'minus'}">${result.rep > 0 ? '+' : ''}${result.rep} uy tín</span>` : '',
   ].filter(Boolean).join(' · ');
 
   let next = 'Gọi khách tiếp theo ▶';
@@ -591,16 +656,36 @@ function showResultSheet(npc, result) {
 function endDay() {
   const g = S.game, d = S.day;
   S.npc = null;
-  // Thanh tra nội bộ kiểm tra phong bì — áp dụng ngay một lần
-  const audit = E.audit(mulberry32(g.seed + g.day * 104729), d.bribes);
+  const rng = mulberry32(g.seed + g.day * 104729);
+  // Thanh tra nội bộ kiểm tra phong bì — áp dụng ngay một lần (được quầy 6 che thì thoát)
+  const auditChance = hasSkill('connections') ? 0.1 : E.AUDIT_CHANCE;
+  const audit = E.audit(rng, d.bribes, auditChance).map((a) => (a.covered ? { ...a, caught: false } : a));
   for (const a of audit) {
     if (!a.caught) continue;
     g.money -= a.amount * 2;
     g.mistakes++;
   }
+  // Món nợ với người lạ: nhận tiền mà không cho người trong ảnh qua → bọn chúng tìm đến nhà
+  let deal = null;
+  const st = g.flags.stranger;
+  const met = d.results.find((r) => r.npc.id === 'npc_201');
+  if (st?.choice === 'take' && st.day === g.day - 1 && met) {
+    if (met.decision === 'ALLOW') deal = { ok: true, text: 'Người trong ảnh đã qua cửa. Bọn chúng giữ lời — không ai làm phiền nhà bạn.' };
+    else {
+      g.money -= 400;
+      const partner = g.family[1];
+      if (partner.alive && !partner.sick) partner.sick = 1;
+      deal = { ok: false, text: 'Bọn chúng tìm đến nhà lúc nửa đêm, lấy lại $400 và đánh bạn đời bị thương.' };
+    }
+  }
+  // Thăng cấp → chọn kỹ năng
+  const newRank = N.rankOf(g.rep);
+  const rankUp = newRank > g.rank ? { to: newRank, choices: N.skillChoices(rng, g.skills), done: false } : null;
   const sick = E.familySick(g.family);
   S.night = {
-    audit,
+    audit, deal, rankUp,
+    event: N.pickEvent(rng, g, R.TOTAL_DAYS),
+    eventResult: null,
     missed: d.visitors.length - d.results.length,
     paid: { rent: true, food: true, heat: true, medicine: sick },
   };
@@ -610,7 +695,67 @@ function endDay() {
   sfx.coin();
 }
 
-const expenseTotal = () => E.EXPENSES.filter((x) => S.night.paid[x.key]).reduce((a, x) => a + x.price, 0);
+const expenseTotal = () => {
+  const sick = E.familySick(S.game.family);
+  return E.expensesFor(S.game)
+    .filter((x) => S.night.paid[x.key] && (!x.onlyIfSick || sick))
+    .reduce((a, x) => a + x.price, 0);
+};
+
+function chooseSkill(key) {
+  const g = S.game, n = S.night;
+  if (!n.rankUp || n.rankUp.done) return;
+  g.rank = n.rankUp.to;
+  if (key) g.skills.push(key);
+  n.rankUp.done = key || true;
+  sfx.coin();
+  renderNight();
+}
+
+function chooseEvent(key) {
+  const g = S.game, n = S.night;
+  if (!n.event || n.eventResult) return;
+  const choice = n.event.choices.find((c) => c.key === key);
+  if (!choice) return;
+  n.eventResult = { label: choice.label, text: N.applyChoice(g, n.event, choice, mulberry32(g.seed + g.day * 31337)) };
+  sfx.paper();
+  renderNight();
+}
+
+function rankUpHtml(n) {
+  if (!n.rankUp) return '';
+  const r = N.RANKS[n.rankUp.to];
+  if (n.rankUp.done) {
+    const sk = N.skillByKey[n.rankUp.done];
+    return `<section class="night-section"><div class="event-card done">🎖 Đã thăng cấp <b>${r.name}</b> — lương $${r.pay}/khách${sk ? ` · Kỹ năng mới: ${sk.icon} <b>${sk.name}</b>` : ''}</div></section>`;
+  }
+  const cards = n.rankUp.choices
+    .map((s) => `<button class="skill" data-skill="${s.key}"><span class="sk-ico">${s.icon}</span><b>${s.name}</b><small>${s.desc}</small></button>`)
+    .join('');
+  return `<section class="night-section"><h3>🎖 Thăng cấp: ${r.name}</h3>
+    <p class="night-note">Lương tăng lên $${r.pay}/khách. Chọn 1 kỹ năng:</p>
+    <div class="skills">${cards || '<button class="btn primary" data-skill="">Nhận quân hàm</button>'}</div></section>`;
+}
+
+function eventHtml(n, left) {
+  const ev = n.event;
+  if (!ev) return '';
+  const photoNpc = ev.photo && S.npcs.find((x) => x.id === ev.photo);
+  const photo = photoNpc ? `<div class="ev-photo">${renderAvatar(photoNpc.avatar, 'calm')}</div>` : '';
+  const body = n.eventResult
+    ? `<div class="ev-result">➜ <b>${esc(n.eventResult.label)}:</b> ${esc(n.eventResult.text)}</div>`
+    : `<div class="ev-choices">${ev.choices
+        .map((c) => {
+          const cost = N.choiceCost(c);
+          return `<button class="btn ev-btn" data-choice="${c.key}" ${cost > 0 && left < cost ? 'disabled' : ''}>${esc(c.label)}</button>`;
+        })
+        .join('')}</div>`;
+  return `<section class="night-section"><h3>🌙 Sự kiện đêm nay</h3>
+    <div class="event-card${n.eventResult ? ' done' : ''}">
+      <div class="ev-head">${photo}<div><b class="ev-title">${esc(ev.title)}</b><p>${esc(ev.text)}</p></div></div>
+      ${body}
+    </div></section>`;
+}
 
 function renderNight() {
   const g = S.game, d = S.day, n = S.night;
@@ -622,6 +767,8 @@ function renderNight() {
   const sick = E.familySick(g.family);
   const spend = expenseTotal();
   const left = g.money - spend;
+  const rank = N.RANKS[g.rank];
+  const next = N.nextRank(g.rank);
 
   const log = d.results
     .map(
@@ -634,19 +781,24 @@ function renderNight() {
   const auditHtml = n.audit.length
     ? `<section class="night-section"><h3>Thanh tra nội bộ</h3>
         <div class="audit ${auditFine ? '' : 'clean'}">${n.audit
-          .map((a) => (a.caught ? `🚨 Phát hiện phong bì $${a.amount} của ${esc(a.name)} — phạt $${a.amount * 2} và 1 cảnh cáo.` : `🤫 Phong bì của ${esc(a.name)} trót lọt.`))
+          .map((a) => (a.caught ? `🚨 Phát hiện phong bì $${a.amount} của ${esc(a.name)} — phạt $${a.amount * 2} và 1 cảnh cáo.` : `🤫 Phong bì của ${esc(a.name)} trót lọt${a.covered ? ' (quầy 6 che giúp)' : ''}.`))
           .join('<br>')}</div></section>`
+    : '';
+  const dealHtml = n.deal
+    ? `<section class="night-section"><h3>Món nợ với người lạ</h3><div class="audit ${n.deal.ok ? 'clean' : ''}">${n.deal.ok ? '🤝' : '💢'} ${esc(n.deal.text)}</div></section>`
     : '';
 
   const family = g.family
     .map((m) => {
-      const st = E.familyStatus(m);
+      const status = E.familyStatus(m);
       const cls = !m.alive ? 'dead' : m.sick ? 'bad' : m.hunger ? 'warn' : 'ok';
-      return `<div class="member ${cls}"><span class="ico">${m.icon}</span>${esc(m.name)}<div class="st">${st}</div></div>`;
+      return `<div class="member ${cls}"><span class="ico">${m.icon}</span>${esc(m.name)}<div class="st">${status}</div></div>`;
     })
     .join('');
+  const homeNotes = [g.warmHome ? '🏠 Nhà mới kín gió — không cần sưởi' : '', g.blessing ? '🙏 Đang có phúc lành từ chùa' : ''].filter(Boolean).join(' · ');
 
-  const expenses = E.EXPENSES.filter((x) => !x.onlyIfSick || sick)
+  const expenses = E.expensesFor(g)
+    .filter((x) => !x.onlyIfSick || sick)
     .map(
       (x) => `<label class="opt${x.required ? ' locked' : ''}">
         <input type="checkbox" data-expense="${x.key}" ${n.paid[x.key] ? 'checked' : ''} ${x.required ? 'disabled' : ''}>
@@ -678,22 +830,32 @@ function renderNight() {
       <div><span>Tiền phạt</span><span>−$${fine + auditFine}</span></div>
       <div class="grand"><span>Trong ví</span><span>${money(g.money)}</span></div>
       <div><span>Cảnh cáo</span><span>${g.mistakes}/${R.MAX_MISTAKES}</span></div>
+      <div><span>Uy tín</span><span>${g.rep}${next ? `/${next.rep} → ${next.name}` : ' (cấp cao nhất)'}</span></div>
     </div>
     ${auditHtml}
-    <section class="night-section"><h3>Gia đình</h3><div class="family">${family}</div>${expenses}</section>
+    ${dealHtml}
+    ${rankUpHtml(n)}
+    ${eventHtml(n, left)}
+    <section class="night-section"><h3>Gia đình</h3><div class="family">${family}</div>${homeNotes ? `<p class="night-note">${homeNotes}</p>` : ''}${expenses}</section>
     <section class="night-section"><h3>Cửa hàng nâng cấp</h3>${shop}</section>
   </div>`;
 
-  $('#night-balance').innerHTML = `<span>Chi đêm nay: $${spend}</span><span>Còn lại: <b class="${left < 0 ? 'neg' : ''}">${money(left)}</b></span>`;
+  $('#night-balance').innerHTML = `<span>${rank.name} · Chi đêm nay: $${spend}</span><span>Còn lại: <b class="${left < 0 ? 'neg' : ''}">${money(left)}</b></span>`;
 
   const btn = $('#btn-next-day');
   btn.disabled = false;
   if (g.mistakes > R.MAX_MISTAKES) {
     btn.textContent = 'Nhận quyết định kỷ luật…';
     btn.onclick = () => gameOver('fired');
-  } else if (g.money < E.EXPENSES[0].price) {
+  } else if (g.money < g.rent) {
     btn.textContent = 'Không đủ tiền nhà…';
     btn.onclick = () => gameOver('evicted');
+  } else if (n.rankUp && !n.rankUp.done) {
+    btn.textContent = 'Hãy chọn kỹ năng thăng cấp ↑';
+    btn.disabled = true;
+  } else if (n.event && !n.eventResult) {
+    btn.textContent = 'Hãy xử lý sự kiện đêm nay ↑';
+    btn.disabled = true;
   } else if (left < 0) {
     btn.textContent = 'Không đủ tiền — bỏ bớt khoản chi';
     btn.disabled = true;
@@ -717,7 +879,7 @@ function buy(key) {
 function sleepNight() {
   const g = S.game, d = S.day, n = S.night;
   g.money -= expenseTotal();
-  const home = E.applyNight(g.family, n.paid);
+  const home = E.applyNight(g.family, n.paid, g); // g mang warmHome/blessing; phúc lành dùng rồi thì g.blessing = false
   sfx.click();
   if (!g.family.some((m) => m.alive)) return gameOver('family');
   if (g.day >= R.TOTAL_DAYS) return gameOver('win');
@@ -753,6 +915,10 @@ function gameOver(kind) {
     <p class="sub">${sub}</p>
     <div class="rank">${ending.rank}</div>
     <p class="epilogue">${ending.epilogue}</p>
+    ${(() => {
+      const notes = epilogueNotes(g);
+      return notes.length ? `<ul class="epi-notes">${notes.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
+    })()}
     <div class="family">${family}</div>
     ${fateList ? `<h3>Số phận những người bạn đã gặp</h3><ul class="fates">${fateList}</ul>` : ''}
     <div class="totals">
@@ -763,6 +929,8 @@ function gameOver(kind) {
       <div><span>Tội phạm lọt lưới</span><span>${g.stats.escaped}</span></div>
       <div><span>Bắt oan</span><span>${g.stats.wrongArrest}</span></div>
       <div><span>Phong bì đã nhận</span><span>${g.bribes}</span></div>
+      <div><span>Cấp bậc</span><span>${N.RANKS[g.rank].name}</span></div>
+      <div><span>Kỹ năng</span><span>${g.skills.map((k) => N.skillByKey[k].icon).join(' ') || '—'}</span></div>
       <div class="grand"><span>Số dư cuối</span><span>${money(g.money)}</span></div>
     </div>
   </div>`;

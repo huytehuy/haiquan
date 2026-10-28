@@ -93,7 +93,8 @@ export function offlineReply(npc, question) {
   const criminal = !!npc.crime;
   const e = d.entry_permit;
 
-  if (intent === 'threat' || intent === 'bribe') npc.pressure = (npc.pressure || 0) + 1;
+  // kỹ năng "Lưỡi sắc": kẻ gian gãy nhanh gấp đôi
+  if (intent === 'threat' || intent === 'bribe') npc.pressure = (npc.pressure || 0) + (npc.slippery ? 2 : 1);
 
   switch (intent) {
     case 'threat':

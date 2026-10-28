@@ -96,11 +96,29 @@ const ENDINGS = {
 export function chooseEnding(g) {
   const st = g.stats;
   const lost = g.family.filter((m) => !m.alive).length;
+  const dirty = g.bribes + (g.flags?.colleague?.choice === 'join' ? 1 : 0) + (g.flags?.stranger?.choice === 'take' ? 1 : 0);
   let key = 'ordinary';
-  if (g.bribes >= 3) key = 'corrupt';
+  if (dirty >= 3) key = 'corrupt';
   else if (st.escaped >= 5) key = 'chaos';
   else if (st.wrongArrest >= 3) key = 'iron';
   else if (lost > 0) key = 'lonely';
-  else if (st.caught >= 8 && g.bribes === 0 && st.escaped <= 1) key = 'hero';
+  else if (st.caught >= 8 && dirty === 0 && st.escaped <= 1) key = 'hero';
   return { key, ...ENDINGS[key] };
+}
+
+/** Hậu ký: những lựa chọn ban đêm theo bạn đến cuối nhiệm kỳ. */
+export function epilogueNotes(g) {
+  const f = g.flags || {};
+  const notes = [];
+  if (f.tuition?.choice === 'pay') notes.push('🎒 Bé Na được tiếp tục đi học, cuối năm đạt học sinh giỏi.');
+  if (f.tuition?.choice === 'skip') notes.push('🎒 Bé Na phải nghỉ học giữa chừng, theo bà ra chợ bán rau.');
+  if (f.colleague?.choice === 'join') notes.push('🤝 Một tháng sau, quầy 6 bị bắt và khai ra tên bạn.');
+  if (f.colleague?.choice === 'report') notes.push('🤝 Vụ tố cáo quầy 6 mở ra cuộc thanh lọc toàn trạm kiểm soát.');
+  if (f.stranger?.choice === 'take') notes.push('📷 Tấm ảnh người lạ vẫn nằm trong ngăn kéo. Bạn không dám vứt nó đi.');
+  if (f.stranger?.choice === 'report') notes.push('📷 Nhờ tin báo của bạn, đường dây bắt cóc "Bóng Ma" bị triệt phá.');
+  if (f.neighbor?.choice === 'report') notes.push('📦 Sổ ghi nợ trong chiếc hộp giúp Bộ An ninh lần ra băng "Rắn".');
+  if (f.temple?.choice === 'go') notes.push('🙏 Mẹ vẫn giữ thói quen lên chùa mỗi rằm, cầu bình an cho cả nhà.');
+  if (g.warmHome) notes.push('🏠 Căn nhà mới nhỏ mà ấm, cả nhà quen dần với khu phố lạ.');
+  if (g.rank >= 3) notes.push('🎖 Bạn được bổ nhiệm làm Thanh tra trưởng trạm kiểm soát.');
+  return notes;
 }

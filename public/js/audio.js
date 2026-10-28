@@ -49,9 +49,20 @@ function noise({ dur = 0.15, vol = 0.4, delay = 0, filter = 800 }) {
   src.start(t);
 }
 
+/** Rung điện thoại (Android; iOS Safari không hỗ trợ thì bỏ qua). Tắt cùng âm thanh. */
+function buzz(pattern) {
+  if (muted) return;
+  try {
+    navigator.vibrate?.(pattern);
+  } catch {
+    /* bỏ qua */
+  }
+}
+
 export const sfx = {
   /** Tiếng đóng dấu "cộp cộp". */
   stamp() {
+    buzz([45, 110, 60]);
     noise({ dur: 0.12, vol: 0.7, filter: 1400 });
     tone({ type: 'sine', freq: 150, to: 45, dur: 0.18, vol: 0.8 });
     noise({ dur: 0.1, vol: 0.5, filter: 900, delay: 0.16 });
@@ -59,6 +70,7 @@ export const sfx = {
   },
   /** Còi báo động khi bắt giữ. */
   alarm() {
+    buzz([250, 150, 250, 150, 400]);
     for (let i = 0; i < 4; i++) {
       tone({ type: 'sawtooth', freq: 620, to: 920, dur: 0.32, vol: 0.09, delay: i * 0.4 });
       tone({ type: 'sawtooth', freq: 920, to: 620, dur: 0.08, vol: 0.05, delay: i * 0.4 + 0.32 });
@@ -69,6 +81,7 @@ export const sfx = {
     tone({ freq: 1319, dur: 0.3, vol: 0.1, delay: 0.08 });
   },
   error() {
+    buzz(140);
     tone({ type: 'sawtooth', freq: 160, dur: 0.3, vol: 0.18 });
     tone({ type: 'sawtooth', freq: 110, dur: 0.45, vol: 0.18, delay: 0.18 });
   },
@@ -91,6 +104,7 @@ export const sfx = {
   },
   /** Chuông hết giờ. */
   bell() {
+    buzz([120, 100, 120, 100, 120]);
     for (let i = 0; i < 3; i++) {
       tone({ type: 'triangle', freq: 1046, dur: 0.5, vol: 0.12, delay: i * 0.35 });
       tone({ type: 'sine', freq: 2093, dur: 0.3, vol: 0.04, delay: i * 0.35 });

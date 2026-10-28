@@ -39,6 +39,8 @@ Mở http://localhost:3000 (trên điện thoại cùng mạng Wi-Fi: `http://<I
 
 - Mỗi ngày 4–6 khách, hơn một nửa là nhân vật có câu chuyện (mỗi ván một dàn khác, một số nhân vật vắng mặt).
 - Hợp lệ → Cho qua · Vi phạm quy tắc → Từ chối · Giấy tờ giả / buôn lậu / truy nã → Bắt giữ. Đúng được lương theo cấp bậc, sai −$30 và 1 cảnh cáo.
+- **Đối chất ⚖️**: chạm 1–2 ô đáng ngờ rồi bấm ⚖️. Chỉ đúng mâu thuẫn → không mất lượt hỏi, +1 uy tín, khách bị dồn vào chân tường; chỉ sai → khách nổi giận, mất 2 lượt hỏi.
+- **Giọng đọc & rung**: lời thoại được đọc bằng giọng tiếng Việt có sẵn của trình duyệt (mỗi nhân vật cao độ khác nhau); điện thoại Android rung khi đóng dấu / báo động. Nút loa: 🔊 âm thanh + giọng → 🔈 chỉ âm thanh → 🔇 tắt.
 - **Phòng thẩm vấn**: sau khi bắt người của đường dây, hỏi 3 câu. Hỏi trúng điều hắn giấu thì hắn dao động; hỏi dồn lần nữa hoặc dọa thẳng thì hắn khai. Lời khai cho manh mối nhận diện Hắc Long (3 manh mối) hoặc nơi giam bé Na.
 - **Vượt cửa khẩu (đổi vai)**: học thuộc danh tính mới, rồi trả lời 3 câu của thanh tra biên phòng. Sai 2 câu, hoặc lỡ miệng gọi con là "Na", nhắc nghề thanh tra hay Hắc Long → bị giữ lại.
 - **Hối lộ**: phong bì $250–2500 (gấp 4–6 lần lương một lượt). Mỗi phong bì 30% bị thanh tra nội bộ tịch thu + 1 cảnh cáo; nhận rồi mà không cho qua thì bị chính người đưa tiền tố cáo (chắc chắn bị phát hiện).
@@ -68,7 +70,8 @@ public/
   js/ai.js             Gọi API hỏi vặn + bộ trả lời offline theo từ khóa
   js/avatar.js         Avatar pixel-art SVG 32×32, đổi biểu cảm theo emotion
   js/docs.js           Render giấy tờ, công văn, kết quả X-quang, vân tay
-  js/audio.js          Âm thanh tổng hợp WebAudio
+  js/audio.js          Âm thanh tổng hợp WebAudio + rung
+  js/voice.js          Giọng đọc tiếng Việt (Web Speech API), mỗi nhân vật một giọng
 ```
 
 ## Thêm nhân vật

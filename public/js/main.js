@@ -10,6 +10,7 @@ import { measureStress, polygraphSvg, fates, chooseEnding, epilogueNotes, dirtyS
 import * as N from './nights.js';
 import * as T from './twists.js';
 import { sfx, toggleMute, isMuted, unlockAudio } from './audio.js';
+import { speak, stopSpeaking, voiceFor, setVoice, isVoiceOn, voiceAvailable, primeVoice, INSPECTOR_VOICE } from './voice.js';
 
 const SAVE_KEY = 'hq_save_v6';
 const QUICK_QUESTIONS = ['Mục đích chuyến đi là gì?', 'Ở lại bao lâu?', 'Mở hành lý ra kiểm tra!', 'Nói thật đi, không tôi bắt giữ!'];
@@ -41,7 +42,7 @@ async function boot() {
   bindEvents();
   animateTitleAvatar();
   setInterval(tickClock, 250);
-  $('#btn-mute').textContent = isMuted() ? '🔇' : '🔊';
+  $('#btn-mute').textContent = soundIcon();
 
   const [npcs, status] = await Promise.all([fetch('/data/npcs.json').then((r) => r.json()), checkAIStatus()]);
   S.npcs = npcs;
@@ -73,9 +74,10 @@ function animateTitleAvatar() {
 }
 
 function bindEvents() {
-  $('#btn-new').onclick = () => { unlockAudio(); sfx.click(); newGame(); };
+  $('#btn-new').onclick = () => { unlockAudio(); primeVoice(); sfx.click(); newGame(); };
   $('#btn-continue').onclick = () => {
     unlockAudio();
+    primeVoice();
     const save = store(SAVE_KEY);
     if (!save) return;
     S.game = save;
@@ -83,9 +85,10 @@ function bindEvents() {
   };
   $('#btn-howto').onclick = () => { unlockAudio(); openModal(howtoHtml()); };
   $('#btn-open').onclick = () => { sfx.click(); show('screen-booth'); nextVisitor(); };
-  $('#btn-mute').onclick = () => { $('#btn-mute').textContent = toggleMute() ? '🔇' : '🔊'; };
+  $('#btn-mute').onclick = cycleSound;
   $('#btn-scan').onclick = scan;
   $('#btn-print').onclick = fingerprint;
+  $('#btn-confront').onclick = confront;
   $('#btn-restart').onclick = () => show('screen-title');
   $('#esc-form').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -154,6 +157,7 @@ function toggleMark(f) {
   S.npc.marks.has(key) ? S.npc.marks.delete(key) : S.npc.marks.add(key);
   f.classList.toggle('marked');
   sfx.click();
+  setControls();
 }
 
 // ---------------------------------------------------------------- Ngày làm việc
@@ -288,6 +292,13 @@ function setControls() {
   $('#btn-print').hidden = !S.day.unlocks.tools.has('print');
   $('#q-left').textContent = npc ? `${npc.qLeft}/${npc.qMax}` : '';
   $('#ask-input').placeholder = npc && npc.qLeft <= 0 ? 'Hết lượt hỏi — hãy ra quyết định' : 'Gõ câu hỏi vặn khách…';
+  // Đối chất: cần 1–2 ô đã đánh dấu và còn lượt hỏi
+  const marked = npc ? npc.marks.size : 0;
+  const cf = $('#btn-confront');
+  cf.disabled = !canAsk || marked < 1 || marked > 2;
+  cf.classList.toggle('ready', !cf.disabled);
+  $('#confront-n').textContent = marked ? ` ${marked}` : '';
+  cf.title = marked > 2 ? 'Chỉ chọn tối đa 2 ô để đối chất' : 'Chỉ ra mâu thuẫn ở các ô đã đánh dấu';
 }
 
 // ---------------------------------------------------------------- Khách
@@ -301,6 +312,7 @@ async function nextVisitor() {
   const gadgets = !mod().noGadgets;
   Object.assign(npc, {
     convo: [], notes: [], pressure: 0, qLeft: qMax, qMax, scanned: null, printed: false, bribeState: null, marks: new Set(), _date: d.date,
+    confronted: new Set(), // mâu thuẫn đã đối chất trúng với khách này
     flags: g.upgrades.comparator && gadgets ? R.flaggedFields(npc, d.date) : new Set(),
     slippery: hasSkill('silver'),
   });
@@ -379,15 +391,34 @@ function setEmotion(e) {
   el.innerHTML = renderAvatar(S.npc.avatar, e);
 }
 
+/** Nút âm thanh xoay vòng: 🔊 âm thanh + giọng đọc → 🔈 chỉ âm thanh → 🔇 tắt hết. */
+const soundIcon = () => (isMuted() ? '🔇' : isVoiceOn() ? '🔊' : '🔈');
+function cycleSound() {
+  if (isMuted()) {
+    toggleMute();
+    setVoice(true);
+  } else if (isVoiceOn()) setVoice(false);
+  else toggleMute();
+  $('#btn-mute').textContent = soundIcon();
+  flash(isMuted() ? '🔇 Tắt âm thanh' : isVoiceOn() ? (voiceAvailable() ? '🔊 Bật giọng đọc' : '🔊 Máy này chưa có giọng tiếng Việt') : '🔈 Chỉ hiệu ứng âm thanh');
+}
+/** Đọc lời thoại nếu đang bật giọng; trả về true nếu thực sự đọc (để tắt tiếng "bíp" gõ chữ). */
+function talk(text, voice) {
+  if (isMuted() || !isVoiceOn() || !voiceAvailable()) return false;
+  speak(text, voice);
+  return true;
+}
+
 /** Hiệu ứng gõ chữ cho lời thoại. */
 async function say(text, source) {
   const token = ++S.typingToken;
   const el = $('#speech-a');
   el.textContent = '';
+  const voiced = talk(text, voiceFor(S.npc, $('#npc').dataset.emotion));
   for (let i = 0; i < text.length; i++) {
     if (token !== S.typingToken) return;
     el.textContent += text[i];
-    if (i % 3 === 0) sfx.blip();
+    if (i % 3 === 0 && !voiced) sfx.blip();
     $('#speech').scrollTop = 1e6;
     await sleep(text[i] === ' ' ? 12 : 20);
   }
@@ -411,7 +442,7 @@ function renderDocView() {
   const hint = S.game.upgrades.comparator && !mod().noGadgets ? 'Ô viền đỏ = máy đối chiếu báo lệch · ' : '';
   $('#doc-view').innerHTML =
     renderDoc(S.tab, S.npc, dayCtx(), S.npc.marks, S.npc.flags) +
-    `<p class="zoom-hint">${hint}Chạm ô thông tin để đánh dấu · chạm giấy để phóng to</p>`;
+    `<p class="zoom-hint">${hint}Chạm 1–2 ô đáng ngờ rồi bấm ⚖️ để đối chất · chạm giấy để phóng to</p>`;
 }
 
 function renderChips() {
@@ -513,6 +544,85 @@ async function fingerprint() {
   S.busy = false;
   setControls();
   if (exposed) offerBribe();
+}
+
+// ---------------------------------------------------------------- Đối chất bằng chứng
+
+const DOC_NAME = { passport: 'Hộ chiếu', entry_permit: 'Giấy phép', customs: 'Tờ khai', work_permit: 'GP lao động' };
+const FIELD_NAME = {
+  name: 'họ tên', dob: 'ngày sinh', sex: 'giới tính', id_number: 'số hộ chiếu', expiry_date: 'hạn hộ chiếu', origin: 'nơi cấp',
+  purpose: 'mục đích', duration_days: 'số ngày lưu trú', cash: 'tiền mặt', employer: 'nơi làm việc', valid_until: 'hạn giấy phép',
+};
+
+/** "Tờ khai: tiền mặt $900" — mô tả một ô đã đánh dấu để đưa vào câu đối chất. */
+function describeField(npc, key) {
+  const [doc, field] = key.split('.');
+  const d = npc.documents[doc] || {};
+  const item = field.startsWith('item') ? d.items?.[+field.slice(4)] : null;
+  const value = item ? item.name : field === 'cash' ? `$${d.cash}` : d[field];
+  return `${DOC_NAME[doc] || doc}: ${item ? 'món' : FIELD_NAME[field] || field} ${value}`;
+}
+
+/**
+ * Chỉ ra mâu thuẫn ở 1–2 ô đã đánh dấu. Trúng: không mất lượt hỏi, +1 uy tín, khách bị dồn vào chân tường.
+ * Trật: khách nổi giận, mất 2 lượt hỏi.
+ */
+async function confront() {
+  const npc = S.npc, g = S.game;
+  const marks = [...(npc?.marks || [])];
+  if (S.busy || !npc || npc.qLeft <= 0 || marks.length < 1 || marks.length > 2) return;
+  unlockAudio();
+  const evidence = R.evidenceFor(npc, dayCtx());
+  const hitKey = marks.find((k) => evidence.has(k) && !npc.confronted.has(evidence.get(k)));
+  const repeated = !hitKey && marks.some((k) => evidence.has(k));
+  let question, note;
+  if (hitKey) {
+    const reason = evidence.get(hitKey);
+    npc.confronted.add(reason);
+    question = `${reason}. Giải thích đi!`;
+    note = `Thanh tra vừa chỉ ra ĐÚNG mâu thuẫn trong giấy tờ của bạn: ${reason}. ${
+      npc.crime ? 'Bạn bị dồn vào chân tường: lúng túng, chống chế yếu ớt, sơ hở hoặc nài nỉ.' : 'Bạn bối rối thừa nhận thiếu sót và xin thông cảm.'
+    }`;
+  } else {
+    question = `${marks.map((k) => describeField(npc, k)).join(' và ')} — chỗ này có vấn đề!`;
+    note = repeated
+      ? 'Thanh tra hỏi lại đúng điều bạn vừa giải thích; trả lời cộc lốc, sốt ruột.'
+      : 'Thanh tra vừa vu cho bạn một mâu thuẫn KHÔNG có thật. Hãy phản bác chắc chắn và tỏ ra bực bội.';
+    npc.qLeft = Math.max(0, npc.qLeft - 2);
+  }
+  npc.notes.push(note);
+  npc.marks.clear();
+  S.busy = true;
+  renderDocView();
+  setControls();
+
+  $('#speech').classList.remove('hide');
+  $('#speech-q').textContent = `Bạn: ⚖️ ${question}`;
+  $('#speech-a').innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+  const res = await interrogate(npc, question, { date: S.day.date, aiOnline: S.ai });
+  let line = res.dialogue, emotion = res.emotion;
+  if (res.source === 'offline') {
+    line = hitKey
+      ? npc.crime ? npc.lines?.mismatch || 'T-tôi... chắc là bên làm giấy in nhầm thôi, thanh tra...' : 'Dạ... đúng là có sai sót thật, xin thanh tra thông cảm.'
+      : 'Có gì sai đâu? Thanh tra nhìn kỹ lại đi!';
+    emotion = hitKey ? (npc.crime ? 'nervous' : 'pleading') : 'angry';
+  }
+  npc.convo.push({ q: question, a: line, emotion });
+  setEmotion(emotion);
+  if (hitKey) {
+    g.rep += 1;
+    npc.pressure++;
+    sfx.coin();
+    flash('⚖️ Đối chất trúng! +1 uy tín');
+  } else {
+    sfx.error();
+    flash(repeated ? '⚖️ Đã đối chất chỗ này rồi — mất lượt hỏi' : '⚖️ Đối chất trật — khách nổi giận, mất lượt hỏi');
+  }
+  if (g.upgrades.polygraph && !mod().noGadgets) showPolygraph(measureStress(npc, question));
+  await say(line, res.source);
+  S.busy = false;
+  setControls();
+  if (hitKey && npc.crime) offerBribe();
 }
 
 // ---------------------------------------------------------------- Hối lộ
@@ -1062,12 +1172,13 @@ function storyNight(g) {
 const storyCard = (title, x) => (x ? `<section class="night-section"><h3>${title}</h3><div class="audit ${x.ok ? 'clean' : ''}">${esc(x.text)}</div></section>` : '');
 
 /** Gõ chữ vào một ô thoại bất kỳ (phòng thẩm vấn, cửa khẩu). */
-async function sayIn(sel, text) {
+async function sayIn(sel, text, voice) {
   const el = $(sel);
   el.textContent = '';
+  const voiced = voice ? talk(text, voice) : false;
   for (let i = 0; i < text.length; i++) {
     el.textContent += text[i];
-    if (i % 3 === 0) sfx.blip();
+    if (i % 3 === 0 && !voiced) sfx.blip();
     await sleep(text[i] === ' ' ? 12 : 20);
   }
 }
@@ -1096,7 +1207,7 @@ function openInterrogation(npc) {
   $$('#ir-chips .chip').forEach((c) => (c.onclick = () => askRoom(c.textContent)));
   $('#ir-done').onclick = closeModal;
   sfx.door();
-  sayIn('#ir-a', '...Tôi không có gì để nói với anh.');
+  sayIn('#ir-a', '...Tôi không có gì để nói với anh.', voiceFor(npc, 'angry'));
 }
 
 async function askRoom(text) {
@@ -1124,7 +1235,7 @@ async function askRoom(text) {
   let line = res.dialogue;
   if (res.source === 'offline') line = info ? `...Được rồi! Tôi khai: ${info}` : secret ? 'T-tôi... tôi không biết gì hết! Đừng ép tôi!' : line;
   $('#ir-ava').innerHTML = renderAvatar(room.npc.avatar, info ? 'pleading' : secret ? 'nervous' : res.emotion);
-  await sayIn('#ir-a', line);
+  await sayIn('#ir-a', line, voiceFor(room.npc, info ? 'pleading' : secret ? 'nervous' : res.emotion));
   if (info) {
     sfx.coin();
     $('#ir-found').innerHTML = room.found.map((t) => `<div class="clue-new">🧩 <b>Khai thác được:</b> ${esc(t)}</div>`).join('');
@@ -1192,7 +1303,7 @@ async function beginEscape() {
   if (!esc2 || esc2.started) return;
   esc2.started = true;
   sfx.door();
-  await sayIn('#esc-a', `Giấy tờ. Hạ kính xe xuống. ...${esc2.cover.questions[0].ask}`);
+  await sayIn('#esc-a', `Giấy tờ. Hạ kính xe xuống. ...${esc2.cover.questions[0].ask}`, INSPECTOR_VOICE);
   $('#esc-input').disabled = false;
   $('#esc-input').focus();
 }
@@ -1216,7 +1327,7 @@ async function answerInspector(text) {
   const res = await inspectorReply({ cover: T.coverSummary(x.cover), asked: q.ask, answer: text, verdict, next, aiOnline: S.ai });
   $('#esc-npc').innerHTML = renderAvatar(x.inspector, verdict === 'ok' ? 'calm' : 'angry');
   if (verdict !== 'ok') sfx.error();
-  await sayIn('#esc-a', res.dialogue);
+  await sayIn('#esc-a', res.dialogue, INSPECTOR_VOICE);
   if (more) {
     $('#esc-input').disabled = false;
     $('#esc-input').focus();
@@ -1238,10 +1349,10 @@ async function finishEscape() {
   await sleep(500);
   if (caught) {
     sfx.alarm();
-    await sayIn('#esc-a', 'Giấy tờ này là giả. Cả nhà, xuống xe. Ngay.');
+    await sayIn('#esc-a', 'Giấy tờ này là giả. Cả nhà, xuống xe. Ngay.', INSPECTOR_VOICE);
   } else {
     sfx.coin();
-    await sayIn('#esc-a', x.owned ? 'Đi đi. ...À, ông chủ gửi lời chào.' : 'Đi đi. Thượng lộ bình an.');
+    await sayIn('#esc-a', x.owned ? 'Đi đi. ...À, ông chủ gửi lời chào.' : 'Đi đi. Thượng lộ bình an.', INSPECTOR_VOICE);
   }
   $('#esc-next').hidden = false;
 }
@@ -1254,6 +1365,7 @@ function openModal(html) {
   $('#modal').hidden = false;
 }
 function closeModal() {
+  if (S.room) stopSpeaking();
   $('#modal').hidden = true;
   if (S.room) endInterrogation();
   if (S.escape && !S.escape.started) beginEscape();
@@ -1270,12 +1382,14 @@ function howtoHtml() {
       <li><b>Ngày 7:</b> trùm Hắc Long đi qua quầy dưới danh tính giả. Đêm đó cả nhà phải rời thành phố — và lần này <b>bạn</b> là người bị thanh tra hỏi vặn.</li>
     </ol>
     <ul>
+      <li><b>Đối chất ⚖️:</b> chạm 1–2 ô đáng ngờ trên giấy tờ rồi bấm ⚖️. Chỉ đúng mâu thuẫn → không mất lượt hỏi, +1 uy tín, khách bị dồn vào chân tường. Chỉ sai → khách nổi giận, mất 2 lượt hỏi.</li>
       <li>Hợp lệ hoàn toàn → <b>Cho qua</b>. Vi phạm quy tắc (hết hạn, hàng cấm, quá ngày…) → <b>Từ chối</b>.</li>
       <li>Giấy tờ giả, buôn lậu, truy nã → <b>Bắt giữ</b> (+$${R.ARREST_BONUS}; từ chối vẫn được tính đúng).</li>
       <li><b>Phòng thẩm vấn:</b> sau khi bắt người của đường dây, hỏi 3 câu. Hỏi trúng điều hắn giấu thì hắn dao động; hỏi dồn lần nữa hoặc dọa thẳng thì hắn khai — mỗi lời khai là một manh mối về Hắc Long.</li>
       <li>Kẻ gian có thể dúi <b>phong bì</b> 💵 — nhận thì có tiền, nhưng ${Math.round(E.AUDIT_CHANCE * 100)}% bị thanh tra nội bộ phát hiện.</li>
       <li>Người bạn cho qua, từ chối hay bắt giữ có thể quay lại (⚠ KHÁCH QUEN).</li>
     </ul>
+    <p>🔊 Nút loa góc trên đổi giữa: âm thanh + giọng đọc tiếng Việt → chỉ âm thanh → tắt. Giọng đọc cần máy có giọng tiếng Việt (Chrome Android, iPhone có sẵn). Điện thoại Android rung khi đóng dấu, báo động.</p>
     <p>Đúng: lương theo cấp bậc. Sai: <b>−$${R.FINE_WRONG}</b> và 1 cảnh cáo. Quá ${R.MAX_MISTAKES} cảnh cáo, không đủ tiền nhà, hoặc mất cả gia đình là Game Over. Có 7 kết thúc tùy những gì bạn chọn.</p>
   </div>`;
 }

@@ -148,6 +148,50 @@ export function checkRules(npc, ctx) {
   return v;
 }
 
+/**
+ * Bằng chứng nằm ngay trên giấy tờ, dùng cho tính năng đối chất: Map 'doc.field' → câu mô tả mâu thuẫn.
+ * Chỉ tính giấy tờ đã mở khóa; hàng lậu giấu kín không có ở đây (phải soi / thẩm vấn).
+ */
+export function evidenceFor(npc, ctx) {
+  const d = npc.documents;
+  const p = d.passport;
+  const out = new Map();
+  const has = (doc) => !!d[doc] && (!ctx.docs || ctx.docs.has(doc));
+  const add = (keys, text) => keys.forEach((k) => out.set(k, text));
+
+  if (p.expiry_date <= ctx.date) add(['passport.expiry_date'], `Hộ chiếu đã hết hạn từ ${p.expiry_date}`);
+  for (const doc of ['entry_permit', 'work_permit', 'customs']) {
+    if (!has(doc)) continue;
+    for (const f of ['name', 'id_number', 'dob']) {
+      if (d[doc][f] !== undefined && d[doc][f] !== p[f]) {
+        add([`${doc}.${f}`, `passport.${f}`], `${FIELD_LABEL[f]} trên ${DOC_LABEL[doc]} là ${d[doc][f]}, còn trên hộ chiếu là ${p[f]}`);
+      }
+    }
+  }
+  const purpose = d.entry_permit?.purpose;
+  for (const r of ctx.rules) {
+    if (r.type === 'BAN_CATEGORY' && has('customs')) {
+      d.customs.items.forEach((it, i) => {
+        if (it.category === r.category) add([`customs.item${i}`], `"${it.name}" thuộc nhóm ${r.category} đang bị cấm`);
+      });
+    } else if (r.type === 'TOURISM_MAX' && purpose === 'Du lịch' && d.entry_permit.duration_days > r.max) {
+      add(['entry_permit.duration_days'], `Khai du lịch ${d.entry_permit.duration_days} ngày, quá giới hạn ${r.max} ngày`);
+    } else if (r.type === 'WORK_PERMIT' && WORK_PURPOSES.includes(purpose)) {
+      if (!d.work_permit) add(['entry_permit.purpose'], `Khai mục đích "${purpose}" nhưng không có giấy phép lao động`);
+      else if (has('work_permit') && d.work_permit.valid_until <= ctx.date) add(['work_permit.valid_until'], `Giấy phép lao động đã hết hạn từ ${d.work_permit.valid_until}`);
+    } else if (r.type === 'BAN_ORIGIN' && p.origin.includes(r.region)) {
+      add(['passport.origin'], `Đến từ ${r.region}, khu vực đang tạm dừng nhập cảnh`);
+    } else if (r.type === 'CASH_LIMIT' && has('customs') && d.customs.cash > r.limit) {
+      add(['customs.cash'], `Mang $${d.customs.cash} tiền mặt, vượt mức $${r.limit}`);
+    }
+  }
+  // Truy nã đúng tên trên lệnh (kẻ dùng tên giả thì phải nhận ra bằng mặt, không đối chất bằng giấy được)
+  if (npc.crime === 'WANTED' && (ctx.wanted || []).some((w) => w.npcId === npc.id && w.name === p.name)) {
+    add(['passport.name', 'passport.id_number'], `Tên ${p.name}, số hộ chiếu ${p.id_number} trùng với lệnh truy nã`);
+  }
+  return out;
+}
+
 /** Các ô giấy tờ "máy đối chiếu" tô đỏ: thông tin lệch hộ chiếu và giấy tờ hết hạn. Dạng 'doc.field'. */
 export function flaggedFields(npc, date) {
   const d = npc.documents;

@@ -556,6 +556,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .interro .chips { margin-bottom: 6px; flex-wrap: wrap; }
 .ir-tip { font-size: 12px; color: var(--muted); margin: 6px 0; line-height: 1.45; }
 .ir-done { width: 100%; }
+.buy-info { width: 100%; margin-bottom: 6px; background: #1e5631; color: #d5f5e3; border: 1px solid #2ea043; }
 .escape-hud .right { text-align: right; flex: 0 0 auto; }
 #esc-sus { color: #ff7b72; letter-spacing: 3px; }
 .escape-cam { background: repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 3px), linear-gradient(180deg, #13261c 0%, #0c1a12 65%, #08110c 65%); }

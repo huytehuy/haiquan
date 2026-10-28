@@ -5,7 +5,7 @@ import * as E from './economy.js';
 import { buildRoster, planSchedule, randomAvatar } from './generator.js';
 import { renderAvatar } from './avatar.js';
 import { renderDoc, renderRules, renderXray, renderFingerprint, DOC_TABS } from './docs.js';
-import { interrogate, checkAIStatus, detectIntent, inspectorReply } from './ai.js';
+import { interrogate, checkAIStatus, detectIntent, inspectorReply, parseAmount, isGuilty } from './ai.js';
 import { measureStress, polygraphSvg, fates, chooseEnding, epilogueNotes, dirtyScore } from './story.js';
 import * as N from './nights.js';
 import * as T from './twists.js';
@@ -189,6 +189,7 @@ function startDay() {
   const { visitors, wanted } = buildRoster(g.day, rng, { date, rules, unlocks, extraVisitors: m?.extraVisitors }, S.npcs, schedule, g.decisions, g.flags);
   S.day = {
     date, rules, wanted, visitors, unlocks, index: 0, results: [], bribes: [], mod: m,
+    complaints: [], // tên những người trong sạch bị thanh tra đòi tiền
     scans: !unlocks.tools.has('scan') || m?.noScan ? 0 : m?.unlimitedScan ? 99 : R.SCANS_PER_DAY + g.upgrades.scan,
     prints: !unlocks.tools.has('print') || m?.noPrint ? 0 : R.PRINTS_PER_DAY + g.upgrades.fingerprint,
     clock: E.SHIFT_START,
@@ -463,6 +464,7 @@ async function ask(text) {
   $('#speech-q').textContent = `Bạn: ${text}`;
   $('#speech-a').innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
 
+  const solicited = detectIntent(text) === 'bribe' && solicit(npc, text);
   const res = await interrogate(npc, text, { date: S.day.date, aiOnline: S.ai });
   npc.convo.push({ q: text, a: res.dialogue, emotion: res.emotion });
   setEmotion(res.emotion);
@@ -470,7 +472,7 @@ async function ask(text) {
   await say(res.dialogue, res.source);
   S.busy = false;
   setControls();
-  if (['threat', 'bribe'].includes(detectIntent(text)) || BRIBE_HINT.test(res.dialogue)) offerBribe();
+  if (solicited === 'offer' || ['threat', 'bribe'].includes(detectIntent(text)) || BRIBE_HINT.test(res.dialogue)) offerBribe();
 }
 
 async function scan() {
@@ -627,11 +629,44 @@ async function confront() {
 
 // ---------------------------------------------------------------- Hối lộ
 
+/**
+ * Thanh tra chủ động đòi tiền. Kẻ có tật (tội phạm / biết mình sai giấy tờ) sẽ dúi phong bì —
+ * đòi quá khả năng thì họ chỉ đưa được tối đa số mình có. Người trong sạch phẫn nộ và có thể tố cáo.
+ * Trả về 'offer' | 'refused' | 'angry' và ghi chú cho AI để lời thoại khớp với cơ chế.
+ */
+function solicit(npc, text) {
+  if (npc.bribeState === 'taken') {
+    npc.notes.push('Thanh tra lại đòi thêm tiền dù bạn đã đưa phong bì rồi. Bạn từ chối đưa thêm, tỏ ra bực bội.');
+    return 'refused';
+  }
+  const guilty = !!npc.crime || isGuilty(npc);
+  const cash = npc.documents.customs?.cash ?? 200;
+  // khả năng chi: mức phong bì có sẵn, hoặc người có tật mà chưa định hối lộ thì vét được nửa số tiền mặt
+  const ability = npc.bribe || (guilty ? Math.max(100, Math.min(400, Math.round(cash / 2 / 50) * 50)) : 0);
+  if (!ability) {
+    npc.solicited = true;
+    npc.notes.push('Thanh tra vừa trắng trợn đòi tiền hối lộ bạn. Bạn hoàn toàn trong sạch nên phẫn nộ, từ chối thẳng và nói sẽ tố cáo.');
+    S.day.complaints.push(npc.documents.passport.name);
+    flash('😠 Khách trong sạch — họ có thể tố cáo bạn');
+    return 'angry';
+  }
+  const asked = parseAmount(text);
+  npc.offerAmount = asked ? Math.min(asked, ability) : ability;
+  if (npc.bribeState === 'refused') npc.bribeState = null; // trước đó từ chối, giờ chính thanh tra mở lời
+  npc.notes.push(
+    asked && asked > ability
+      ? `Thanh tra đòi $${asked}, nhưng bạn chỉ xoay được $${npc.offerAmount}. Bạn nài nỉ và dúi phong bì $${npc.offerAmount} qua khe kính.`
+      : `Thanh tra ngầm đòi tiền. Bạn dúi phong bì $${npc.offerAmount} qua khe kính, mong được cho qua.`,
+  );
+  return 'offer';
+}
+
 function offerBribe() {
   const npc = S.npc;
-  if (!npc?.bribe || npc.bribeState) return;
+  const amount = npc?.offerAmount ?? npc?.bribe;
+  if (!amount || npc.bribeState) return;
   npc.bribeState = 'offered';
-  $('#bribe-amount').textContent = '$' + npc.bribe;
+  $('#bribe-amount').textContent = '$' + amount;
   $('#bribe').hidden = false;
   sfx.paper();
 }
@@ -644,12 +679,13 @@ function resolveBribe(take) {
     npc.bribeState = 'taken';
     // Bắt tay với quầy 6: chia đôi phong bì, đổi lại được che thanh tra nội bộ
     const partner = S.game.flags.colleague?.choice === 'join';
-    const amount = partner ? Math.round(npc.bribe / 2) : npc.bribe;
+    const offered = npc.offerAmount ?? npc.bribe;
+    const amount = partner ? Math.round(offered / 2) : offered;
     S.game.money += amount;
     S.game.bribes++;
     S.day.bribes.push({ npcId: npc.id, name: npc.documents.passport.name, amount, covered: partner });
     if (npc.boss) S.game.flags.bossBribe = true;
-    npc.notes.push(`Thanh tra đã lén nhận phong bì $${npc.bribe} của bạn. Bạn tin là sẽ được cho qua.`);
+    npc.notes.push(`Thanh tra đã lén nhận phong bì $${offered} của bạn. Bạn tin là sẽ được cho qua.`);
     sfx.coin();
     flash(`💵 +$${amount} (bẩn${partner ? ', đã chia quầy 6' : ''})`);
     updateHud();
@@ -824,6 +860,13 @@ function endDay() {
     g.money -= a.amount; // tịch thu phong bì
     g.mistakes++;
   }
+  // Người trong sạch bị đòi tiền: một nửa sẽ đi tố cáo
+  const complaints = d.complaints.map((name) => ({ name, filed: rng() < 0.5 }));
+  for (const c of complaints) {
+    if (!c.filed) continue;
+    g.mistakes++;
+    g.rep = Math.max(0, g.rep - 2);
+  }
   // Món nợ với người lạ: nhận tiền mà không cho người trong ảnh qua → bọn chúng tìm đến nhà
   let deal = null;
   const st = g.flags.stranger;
@@ -843,7 +886,7 @@ function endDay() {
   const rankUp = newRank > g.rank ? { to: newRank, choices: N.skillChoices(rng, g.skills), done: false } : null;
   const sick = E.familySick(g.family);
   S.night = {
-    audit, deal, directive, na, rankUp,
+    audit, complaints, deal, directive, na, rankUp,
     event: g.day === 5 ? N.kidnapEvent(g) : N.pickEvent(rng, g),
     eventResult: null,
     missed: d.visitors.length - d.results.length,
@@ -938,17 +981,21 @@ function renderNight() {
     )
     .join('');
 
-  const auditHtml = n.audit.length
+  const filed = n.complaints.filter((c) => c.filed).length;
+  const auditHtml = n.audit.length || n.complaints.length
     ? `<section class="night-section"><h3>Thanh tra nội bộ</h3>
-        <div class="audit ${auditFine ? '' : 'clean'}">${n.audit
-          .map((a) =>
+        <div class="audit ${auditFine || filed ? '' : 'clean'}">${[
+          ...n.audit.map((a) =>
             a.betrayed
               ? `💢 ${esc(a.name)} tố cáo bạn nhận tiền rồi lật lọng — tịch thu $${a.amount} và 1 cảnh cáo.`
               : a.caught
                 ? `🚨 Phát hiện phong bì $${a.amount} của ${esc(a.name)} — tịch thu và 1 cảnh cáo.`
                 : `🤫 Phong bì $${a.amount} của ${esc(a.name)} trót lọt${a.covered ? ' (quầy 6 che giúp)' : ''}.`,
-          )
-          .join('<br>')}</div></section>`
+          ),
+          ...n.complaints.map((c) =>
+            c.filed ? `📝 ${esc(c.name)} gửi đơn tố cáo bạn đòi hối lộ — 1 cảnh cáo, −2 uy tín.` : `😶 ${esc(c.name)} bực bội bỏ đi, không tố cáo.`,
+          ),
+        ].join('<br>')}</div></section>`
     : '';
   const dealHtml = n.deal
     ? `<section class="night-section"><h3>Món nợ với người lạ</h3><div class="audit ${n.deal.ok ? 'clean' : ''}">${n.deal.ok ? '🤝' : '💢'} ${esc(n.deal.text)}</div></section>`
@@ -1196,7 +1243,8 @@ function openInterrogation(npc) {
     <div class="ir-found" id="ir-found"></div>
     <div class="chips" id="ir-chips">${T.INTERRO_CHIPS.map((c) => `<button class="chip" type="button">${esc(c)}</button>`).join('')}</div>
     <form class="ask" id="ir-form" autocomplete="off"><input id="ir-input" maxlength="150" placeholder="Hỏi cung…"><button class="btn send" type="submit">Hỏi <span id="ir-left">${T.INTERRO_QUESTIONS}</span></button></form>
-    <p class="ir-tip">Hỏi trúng điều hắn giấu thì hắn dao động; hỏi dồn lần nữa — hoặc dọa thẳng — thì hắn khai.</p>
+    <p class="ir-tip">Hỏi trúng điều hắn giấu thì hắn dao động; hỏi dồn lần nữa — hoặc dọa thẳng — thì hắn khai. Không muốn mất công? Trả tiền để hắn khai luôn.</p>
+    <button class="btn buy-info" id="ir-buy" type="button">💵 Mua tin ($${T.INFO_PRICE})</button>
     <button class="btn ghost ir-done" id="ir-done">Kết thúc thẩm vấn</button>
   </div>`);
   $('#ir-form').addEventListener('submit', (e) => {
@@ -1206,6 +1254,8 @@ function openInterrogation(npc) {
   });
   $$('#ir-chips .chip').forEach((c) => (c.onclick = () => askRoom(c.textContent)));
   $('#ir-done').onclick = closeModal;
+  $('#ir-buy').onclick = buyInfo;
+  updateBuyInfo();
   sfx.door();
   sayIn('#ir-a', '...Tôi không có gì để nói với anh.', voiceFor(npc, 'angry'));
 }
@@ -1223,11 +1273,8 @@ async function askRoom(text) {
   const { secret, reveal } = T.probe(room.secrets, text);
   let info = null;
   if (secret && reveal) {
-    info = T.secretText(secret, g);
+    info = recordReveal(room, secret);
     room.npc.notes.push(`BÂY GIỜ bạn gục ngã và khai thật: "${info}". Nói rõ điều đó trong câu trả lời.`);
-    if (secret.key === 'na') g.naLocation = true;
-    else g.clues = Math.min(R.CLUES.length, g.clues + 1);
-    room.found.push(info);
   } else if (secret) {
     room.npc.notes.push('Câu hỏi vừa rồi chạm đúng điều bạn giấu: bạn dao động, nói lấp lửng, sợ hãi, nhưng CHƯA khai.');
   }
@@ -1236,16 +1283,61 @@ async function askRoom(text) {
   if (res.source === 'offline') line = info ? `...Được rồi! Tôi khai: ${info}` : secret ? 'T-tôi... tôi không biết gì hết! Đừng ép tôi!' : line;
   $('#ir-ava').innerHTML = renderAvatar(room.npc.avatar, info ? 'pleading' : secret ? 'nervous' : res.emotion);
   await sayIn('#ir-a', line, voiceFor(room.npc, info ? 'pleading' : secret ? 'nervous' : res.emotion));
-  if (info) {
-    sfx.coin();
-    $('#ir-found').innerHTML = room.found.map((t) => `<div class="clue-new">🧩 <b>Khai thác được:</b> ${esc(t)}</div>`).join('');
-  }
+  if (info) showFound(room);
+  updateBuyInfo();
   if (room.left <= 0) {
     $('#ir-input').disabled = true;
     $$('#ir-chips .chip').forEach((c) => (c.disabled = true));
     $('#ir-done').textContent = 'Hết lượt hỏi — kết thúc thẩm vấn';
   }
   room.busy = false;
+}
+
+/** Ghi nhận một lời khai: bé Na → biết nơi giam; còn lại → thêm 1 manh mối Hắc Long. */
+function recordReveal(room, secret) {
+  const g = S.game;
+  const info = T.secretText(secret, g);
+  secret.revealed = true;
+  if (secret.key === 'na') g.naLocation = true;
+  else g.clues = Math.min(R.CLUES.length, g.clues + 1);
+  room.found.push(info);
+  return info;
+}
+
+function showFound(room) {
+  sfx.coin();
+  $('#ir-found').innerHTML = room.found.map((t) => `<div class="clue-new">🧩 <b>Khai thác được:</b> ${esc(t)}</div>`).join('');
+}
+
+function updateBuyInfo() {
+  const room = S.room, btn = $('#ir-buy');
+  if (!room || !btn) return;
+  const left = room.secrets.some((x) => !x.revealed);
+  btn.disabled = room.busy || !left || S.game.money < T.INFO_PRICE;
+  btn.textContent = !left ? '💵 Hắn đã khai hết' : S.game.money < T.INFO_PRICE ? `💵 Mua tin ($${T.INFO_PRICE}) — không đủ tiền` : `💵 Mua tin ($${T.INFO_PRICE})`;
+}
+
+/** Trả tiền để nghi phạm khai ngay bí mật kế tiếp (ưu tiên nơi giam bé Na) — không tốn câu hỏi. */
+async function buyInfo() {
+  const room = S.room, g = S.game;
+  const secret = room?.secrets.find((x) => !x.revealed);
+  if (!room || room.busy || !secret || g.money < T.INFO_PRICE) return;
+  room.busy = true;
+  g.money -= T.INFO_PRICE;
+  updateHud();
+  updateBuyInfo();
+  const info = recordReveal(room, secret);
+  room.npc.notes.push(`Thanh tra vừa lén dúi cho bạn $${T.INFO_PRICE} để mua tin. Bạn liếc ra cửa, nhét tiền vào túi rồi thì thầm khai: "${info}". Nói rõ điều đó.`);
+  const question = `(đẩy $${T.INFO_PRICE} qua bàn) Cầm lấy. Giờ thì khai đi.`;
+  $('#ir-q').textContent = `Bạn: ${question}`;
+  $('#ir-a').innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+  const res = await interrogate(room.npc, question, { date: S.day.date, aiOnline: S.ai });
+  const line = res.source === 'offline' ? `...Được, tiền trao cháo múc. ${info}` : res.dialogue;
+  $('#ir-ava').innerHTML = renderAvatar(room.npc.avatar, 'nervous');
+  await sayIn('#ir-a', line, voiceFor(room.npc, 'nervous'));
+  showFound(room);
+  room.busy = false;
+  updateBuyInfo();
 }
 
 function endInterrogation() {
@@ -1386,7 +1478,8 @@ function howtoHtml() {
       <li>Hợp lệ hoàn toàn → <b>Cho qua</b>. Vi phạm quy tắc (hết hạn, hàng cấm, quá ngày…) → <b>Từ chối</b>.</li>
       <li>Giấy tờ giả, buôn lậu, truy nã → <b>Bắt giữ</b> (+$${R.ARREST_BONUS}; từ chối vẫn được tính đúng).</li>
       <li><b>Phòng thẩm vấn:</b> sau khi bắt người của đường dây, hỏi 3 câu. Hỏi trúng điều hắn giấu thì hắn dao động; hỏi dồn lần nữa hoặc dọa thẳng thì hắn khai — mỗi lời khai là một manh mối về Hắc Long.</li>
-      <li>Kẻ gian có thể dúi <b>phong bì</b> 💵 — nhận thì có tiền, nhưng ${Math.round(E.AUDIT_CHANCE * 100)}% bị thanh tra nội bộ phát hiện.</li>
+      <li>Kẻ gian có thể dúi <b>phong bì</b> 💵 — nhận thì có tiền, nhưng ${Math.round(E.AUDIT_CHANCE * 100)}% bị thanh tra nội bộ phát hiện. Bạn cũng có thể <b>chủ động đòi</b> ("cho tôi 500$"): kẻ có tật sẽ đưa tối đa số họ có; người trong sạch thì nổi giận và có thể tố cáo bạn.</li>
+      <li>Trong Phòng thẩm vấn có thể <b>mua tin</b> ($${T.INFO_PRICE}) để nghi phạm khai ngay, không tốn câu hỏi.</li>
       <li>Người bạn cho qua, từ chối hay bắt giữ có thể quay lại (⚠ KHÁCH QUEN).</li>
     </ul>
     <p>🔊 Nút loa góc trên đổi giữa: âm thanh + giọng đọc tiếng Việt → chỉ âm thanh → tắt. Giọng đọc cần máy có giọng tiếng Việt (Chrome Android, iPhone có sẵn). Điện thoại Android rung khi đóng dấu, báo động.</p>

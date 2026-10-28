@@ -42,6 +42,8 @@ export async function interrogate(npc, question, { date, aiOnline }) {
             alibi: npc.ai_persona.alibi,
             triggers: npc.ai_persona.triggers,
             documents: docSummary(npc.documents),
+            // số tiền phong bì duy nhất nhân vật được phép nhắc tới (0 = không hối lộ)
+            bribe: npc.bribeState === 'taken' ? 0 : npc.offerAmount ?? npc.bribe ?? 0,
           },
           notes: npc.notes,
           history: npc.convo.map(({ q, a, emotion }) => ({ q, a, e: emotion })),
@@ -91,7 +93,8 @@ export async function inspectorReply({ cover, asked, answer, verdict, next, aiOn
 // ---------------- Kịch bản offline ----------------
 
 const INTENTS = [
-  ['bribe', /(hoi lo|dut lot|an hoi|tien tra)/],
+  // đòi / nhắc tới tiền: "cho tôi 500$", "phong bì đâu", "tiền cà phê", "làm luật"...
+  ['bribe', /(hoi lo|dut lot|an hoi|tien tra|cho toi \$?\d|\d+ ?(\$|do\b|usd|k\b)|\$ ?\d|dua tien|dua them|phong bi|tien ca phe|tien nuoc|boi duong|lam luat|lot tay|chi tien|chung chi|bao nhieu tien thi)/],
   ['threat', /(bat giu|bat |cong an|di tu|tam giam|noi that|khai that|thanh that|canh cao|doa|lam ro|giau gi|ai sai|truy na|chau ba long)/],
   ['mismatch', /(khong khop|khac nhau|gia mao|giay gia|ngay sinh|nam sinh|so ho chieu|sai ten|ten khac|petrovna|nham)/],
   ['luggage', /(vali|hanh ly|mo ra|kiem tra|hop|tui|do dac|mang theo|ben trong|chua gi|dung gi|thung|loa|my pham|dung moi|vac.?xin|hang)/],
@@ -102,6 +105,14 @@ const INTENTS = [
   ['origin', /(tu dau|que|song o|den tu|o dau)/],
   ['cash', /(tien mat|bao nhieu tien|tien)/],
 ];
+
+/** Số tiền người chơi nêu trong câu: "500$", "$1.200", "300 đô", "2k" → số; không có → null. */
+export function parseAmount(q) {
+  const m = normalize(q).match(/(\d+(?:[.,]\d{3})*)\s*(k\b)?/);
+  if (!m) return null;
+  const n = Number(m[1].replace(/[.,]/g, '')) * (m[2] ? 1000 : 1);
+  return n >= 10 ? n : null;
+}
 
 export function detectIntent(q) {
   const n = ' ' + normalize(q) + ' ';
@@ -127,6 +138,8 @@ export function offlineReply(npc, question) {
   switch (intent) {
     case 'threat':
     case 'bribe': {
+      if (intent === 'bribe' && npc.offerAmount) return { dialogue: `Dạ... tôi chỉ xoay được chừng này: $${npc.offerAmount}. Thanh tra cầm lấy, cho tôi qua nhé.`, emotion: 'pleading' };
+      if (intent === 'bribe' && npc.solicited) return { dialogue: 'Thanh tra đòi tiền tôi á? Tôi chẳng có gì phải giấu! Tôi sẽ tố cáo anh!', emotion: 'angry' };
       const lines = L.threat;
       if (lines?.length) {
         const i = Math.min((npc.pressure || 1) - 1, lines.length - 1);

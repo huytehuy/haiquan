@@ -41,9 +41,9 @@ Mở http://localhost:3000 (trên điện thoại cùng mạng Wi-Fi: `http://<I
 - Hợp lệ → Cho qua · Vi phạm quy tắc → Từ chối · Giấy tờ giả / buôn lậu / truy nã → Bắt giữ. Đúng được lương theo cấp bậc, sai −$30 và 1 cảnh cáo.
 - **Đối chất ⚖️**: chạm 1–2 ô đáng ngờ rồi bấm ⚖️. Chỉ đúng mâu thuẫn → không mất lượt hỏi, +1 uy tín, khách bị dồn vào chân tường; chỉ sai → khách nổi giận, mất 2 lượt hỏi.
 - **Giọng đọc & rung**: lời thoại được đọc bằng giọng tiếng Việt có sẵn của trình duyệt (mỗi nhân vật cao độ khác nhau); điện thoại Android rung khi đóng dấu / báo động. Nút loa: 🔊 âm thanh + giọng → 🔈 chỉ âm thanh → 🔇 tắt.
-- **Phòng thẩm vấn**: sau khi bắt người của đường dây, hỏi 3 câu. Hỏi trúng điều hắn giấu thì hắn dao động; hỏi dồn lần nữa hoặc dọa thẳng thì hắn khai. Lời khai cho manh mối nhận diện Hắc Long (3 manh mối) hoặc nơi giam bé Na.
+- **Phòng thẩm vấn**: sau khi bắt người của đường dây, hỏi 3 câu — hoặc **mua tin** $200 để hắn khai ngay. Hỏi trúng điều hắn giấu thì hắn dao động; hỏi dồn lần nữa hoặc dọa thẳng thì hắn khai. Lời khai cho manh mối nhận diện Hắc Long (3 manh mối) hoặc nơi giam bé Na.
 - **Vượt cửa khẩu (đổi vai)**: học thuộc danh tính mới, rồi trả lời 3 câu của thanh tra biên phòng. Sai 2 câu, hoặc lỡ miệng gọi con là "Na", nhắc nghề thanh tra hay Hắc Long → bị giữ lại.
-- **Hối lộ**: phong bì $250–2500 (gấp 4–6 lần lương một lượt). Mỗi phong bì 30% bị thanh tra nội bộ tịch thu + 1 cảnh cáo; nhận rồi mà không cho qua thì bị chính người đưa tiền tố cáo (chắc chắn bị phát hiện).
+- **Hối lộ**: phong bì $250–2500 (gấp 4–6 lần lương một lượt). Có thể **chủ động đòi** ("cho tôi 500$"): kẻ có tật đưa tối đa số họ có, người trong sạch nổi giận và 50% sẽ tố cáo (1 cảnh cáo, −2 uy tín). Mỗi phong bì 30% bị thanh tra nội bộ tịch thu + 1 cảnh cáo; nhận rồi mà không cho qua thì bị chính người đưa tiền tố cáo (chắc chắn bị phát hiện).
 - **Cửa hàng**: đồ xịn đắt — máy phát hiện nói dối $400, máy đối chiếu $450 (≈4 đêm để dành); máy soi / vân tay / sổ thẩm vấn / cà phê $140–160; luật sư $250.
 - Vẫn giữ: thanh tra nội bộ, gia đình & chi tiêu, cửa hàng nâng cấp, cấp bậc & kỹ năng, sự kiện ban đêm (đêm 1–4), khách quen, báo sáng.
 - **7 kết thúc**: Người hạ bệ Hắc Long · Cái giá của công lý · Kẻ hai mặt · Bạn chọn con · Tay sai của Hắc Long · Con rồng vẫn ngủ yên · Gục ngã ở vạch cuối — kèm hậu ký và số phận từng nhân vật.

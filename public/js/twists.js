@@ -5,6 +5,7 @@ import { detectIntent } from './ai.js';
 
 // ---------------- Phòng thẩm vấn ----------------
 export const INTERRO_QUESTIONS = 3;
+export const INFO_PRICE = 200; // mua tin: trả tiền để nghi phạm khai ngay, không tốn câu hỏi
 export const INTERRO_CHIPS = ['Ai thuê mày?', 'Bé Na đang ở đâu?', 'Khai thật đi, không thì ngồi tù mãn kiếp!'];
 
 const TOPICS = {

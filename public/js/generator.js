@@ -105,13 +105,13 @@ function tweakId(rng, id) {
 }
 
 /** Chọn kiểu vi phạm cho khách ngẫu nhiên. */
-function rollViolation(rng, day, rules) {
+function rollViolation(rng, day, rules, unlocks) {
   const r = rng();
-  const cleanP = day === 1 ? 0.55 : 0.45;
+  const cleanP = day === 1 ? 0.5 : 0.45;
   if (r < cleanP) return null;
-  if (r < cleanP + 0.12) return { kind: 'EXPIRED' };
-  if (day > 1 && r > 0.93) return { kind: 'CONTRABAND' };
-  if (r > (day === 1 ? 0.95 : 0.86)) return { kind: 'FORGERY' };
+  if (r < cleanP + 0.15) return { kind: 'EXPIRED' };
+  if (unlocks?.tools.has('scan') && r > 0.92) return { kind: 'CONTRABAND' };
+  if (r > 0.84 || !rules.length) return { kind: 'FORGERY' };
   return { kind: 'RULE', rule: pick(rng, rules) };
 }
 
@@ -201,7 +201,8 @@ function makeFiller(rng, idx, ctx, violation, avoidAvatars) {
 
   if (violation?.kind === 'FORGERY') {
     const field = pick(rng, ['name', 'dob', 'id_number']);
-    const target = workPermit && field !== 'dob' && chance(rng, 0.3) ? workPermit : entry;
+    const canWork = workPermit && (!ctx.unlocks || ctx.unlocks.docs.has('work_permit'));
+    const target = canWork && field !== 'dob' && chance(rng, 0.3) ? workPermit : entry;
     target[field] = field === 'name' ? tweakName(rng, name) : field === 'dob' ? tweakDob(rng, dob) : tweakId(rng, id);
   }
 
@@ -283,25 +284,27 @@ export const eligible = (n, decisions) =>
  * Xếp lịch cho nhân vật viết tay của một chương: mỗi ván một thứ tự khác, tôn trọng minDay / fixedDay
  * và điều kiện requires/excludes. Trả về { npcId: day }. Cùng rng-seed + cùng quyết định → cùng lịch.
  */
-export function planSchedule(allNpcs, rng, totalDays, chapter = 1, decisions = {}) {
-  const capacity = Array.from({ length: totalDays }, (_, i) => (i === 0 ? 3 : 4));
-  const pool = allNpcs.filter((n) => !n.follow && (n.chapter || 1) === chapter && eligible(n, decisions));
+// Nhân vật có tên mỗi ngày & tổng số khách mục tiêu — ngày ngắn, phần lớn là người có câu chuyện
+const DAILY_NAMED = [2, 3, 3, 3, 2, 2, 0];
+const DAILY_TOTAL = [4, 5, 5, 5, 5, 5, 4];
+
+export function planSchedule(allNpcs, rng, totalDays, decisions = {}) {
+  // Số nhân vật có tên được xếp vào mỗi ngày (chưa tính ngày cố định & khách quen)
+  const capacity = DAILY_NAMED.slice(0, totalDays);
+  const pool = allNpcs.filter((n) => !n.follow && eligible(n, decisions));
   const plan = {};
-  // ngày cố định (nghi phạm ngày cuối) chiếm chỗ trước
-  for (const n of pool.filter((x) => x.fixedDay)) {
-    plan[n.id] = n.fixedDay;
-    capacity[n.fixedDay - 1] = Math.max(0, capacity[n.fixedDay - 1] - 1);
-  }
+  for (const n of pool.filter((x) => x.fixedDay)) plan[n.id] = n.fixedDay;
   // xếp nhân vật kén ngày (minDay cao) trước để chắc chắn còn chỗ
-  const fixed = shuffle(rng, pool.filter((x) => !x.fixedDay)).sort((a, b) => b.minDay - a.minDay);
-  for (const n of fixed) {
+  const rest = shuffle(rng, pool.filter((x) => !x.fixedDay)).sort((a, b) => b.minDay - a.minDay);
+  for (const n of rest) {
     // chọn ngẫu nhiên trong các ngày còn trống nhiều chỗ nhất → lịch ngẫu nhiên nhưng đều
     let best = 0;
     for (let d = n.minDay; d <= totalDays; d++) best = Math.max(best, capacity[d - 1]);
+    if (best === 0) continue; // hết chỗ: nhân vật này vắng mặt ván này → mỗi ván một dàn khác
     const days = [];
-    for (let d = n.minDay; d <= totalDays; d++) if (best > 0 && capacity[d - 1] === best) days.push(d);
-    const day = days.length ? pick(rng, days) : randInt(rng, n.minDay, totalDays);
-    if (capacity[day - 1] > 0) capacity[day - 1]--;
+    for (let d = n.minDay; d <= totalDays; d++) if (capacity[d - 1] === best) days.push(d);
+    const day = pick(rng, days);
+    capacity[day - 1]--;
     plan[n.id] = day;
   }
   return plan;
@@ -330,8 +333,8 @@ export function buildRoster(day, rng, ctx, allNpcs, schedule, history = {}, flag
   const absDay = ctx.absDay ?? day;
   const scheduled = allNpcs.filter((n) => schedule[n.id] === day || followUpDue(n, absDay, history, flags)).map(clone);
   // Hàng chờ dài hơn sức xử lý trong một ca — làm nhanh thì kiếm nhiều hơn
-  const total = (day === 1 ? 6 : randInt(rng, 7, 9)) + (ctx.extraVisitors || 0);
-  const fillerCount = Math.max(total - scheduled.length, 2);
+  const total = (DAILY_TOTAL[day - 1] ?? 5) + (ctx.extraVisitors || 0);
+  const fillerCount = Math.max(total - scheduled.length, 1);
 
   // Kẻ đã "mua đường" (nhận tiền ở sự kiện đêm) thì không có tên trên lệnh truy nã
   const onBulletin = (n) => !(n.follow?.hiddenWhen || []).includes(flags[n.follow?.event]?.choice);
@@ -354,7 +357,7 @@ export function buildRoster(day, rng, ctx, allNpcs, schedule, history = {}, flag
   const avoid = wanted.map((w) => w.avatar).filter(Boolean);
 
   const fillers = [];
-  for (let i = 0; i < fillerCount; i++) fillers.push(makeFiller(rng, i, { ...ctx, day }, rollViolation(rng, day, ctx.rules), avoid));
+  for (let i = 0; i < fillerCount; i++) fillers.push(makeFiller(rng, i, { ...ctx, day }, rollViolation(rng, day, ctx.rules, ctx.unlocks), avoid));
 
   return { visitors: shuffle(rng, [...scheduled, ...fillers]), wanted: shuffle(rng, wanted) };
 }

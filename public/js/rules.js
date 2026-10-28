@@ -2,18 +2,36 @@
 import { addDays, pick, shuffle } from './util.js';
 
 export const START_DATE = '2026-10-28';
-export const TOTAL_DAYS = 5; // số ngày mỗi chương
-export const CHAPTERS = 2;
-// Chương 2 diễn ra "ba tháng sau"
-const CHAPTER_START = { 1: START_DATE, 2: '2027-02-01' };
+export const TOTAL_DAYS = 7; // một chiến dịch 7 ngày
 
-// Manh mối về trùm Hắc Long, mở theo thứ tự khi bắt được người của đường dây (hoặc người tốt kể lại)
+// Mỗi ngày mở thêm một thứ mới (kiểu Papers, Please). Giá trị tích lũy: ngày sau giữ những gì đã mở.
+const UNLOCK_STEPS = {
+  1: { docs: ['passport', 'entry_permit'], tools: [], rules: 0, note: 'Hộ chiếu và Giấy phép nhập cảnh. Soi kỹ ngày hết hạn và thông tin có khớp nhau không.' },
+  2: { docs: ['customs', 'work_permit'], tools: [], rules: 2, note: 'Mở Tờ khai hải quan, Giấy phép lao động và các quy tắc của ngày.' },
+  3: { docs: [], tools: ['scan', 'interrogate'], rules: 2, note: 'Mở máy soi X-quang 🩻 và Phòng thẩm vấn 🔦 (sau khi bắt người của đường dây).' },
+  4: { docs: [], tools: ['print'], rules: 2, note: 'Mở máy tra vân tay 🖐.' },
+  5: { docs: [], tools: [], rules: 3 },
+  6: { docs: [], tools: [], rules: 3 },
+  7: { docs: [], tools: [], rules: 3 },
+};
+
+/** Những gì đã mở khóa tính đến ngày `day`: { docs: Set, tools: Set, rules: số quy tắc ngày, note: điều mới hôm nay }. */
+export function unlocksFor(day) {
+  const docs = new Set(), tools = new Set();
+  for (let d = 1; d <= day; d++) {
+    UNLOCK_STEPS[d].docs.forEach((x) => docs.add(x));
+    UNLOCK_STEPS[d].tools.forEach((x) => tools.add(x));
+  }
+  return { docs, tools, rules: UNLOCK_STEPS[day].rules, note: UNLOCK_STEPS[day].note || '' };
+}
+
+// Manh mối về trùm Hắc Long — khai thác trong Phòng thẩm vấn
 export const CLUES = [
   'Trùm Hắc Long luôn đi bằng hộ chiếu cấp tại Tân Dubai.',
   'Hắn khai đi công tác cho "Công ty Bảo vệ Hắc Long" — công ty bình phong của đường dây.',
   'Vân tay của hắn đã bị xóa khỏi cơ sở dữ liệu quốc gia.',
 ];
-export const CH1_CLUE_CAP = 2; // chương 1 chỉ lộ được tối đa 2 manh mối
+export const NA_LOCATION = 'Bé Na bị giam ở kho số 9, cảng Khánh Hội.';
 export const PAY_CORRECT = 50;
 export const ARREST_BONUS = 20;
 export const FINE_WRONG = 30;
@@ -30,7 +48,7 @@ export const DOMESTIC_REGIONS = ['Neo-Saigon', 'Liên khu Mê Kông', 'Đà Lạ
 export const FOREIGN_REGIONS = ['Thành bang Phnom Penh', 'Tân Bangkok', 'Liên bang Nga', 'Neo-Tokyo', 'Seoul Mới', 'Manila Ngầm', 'Tân Dubai'];
 export const WORK_PURPOSES = ['Công tác', 'Lao động'];
 
-export const dayDate = (day, chapter = 1) => addDays(CHAPTER_START[chapter], day - 1);
+export const dayDate = (day) => addDays(START_DATE, day - 1);
 
 const RULE_BUILDERS = {
   BAN_CATEGORY: (rng, used) => {
@@ -44,10 +62,10 @@ const RULE_BUILDERS = {
   CASH_LIMIT: (rng) => ({ type: 'CASH_LIMIT', limit: pick(rng, [1000, 2000, 2500]) }),
 };
 
-/** Sinh quy tắc ngẫu nhiên cho ngày: 2 quy tắc ở ngày 1–2 để làm quen, 3 quy tắc từ ngày 3. */
+/** Sinh quy tắc ngẫu nhiên cho ngày — số lượng tăng dần theo UNLOCKS (ngày 1 chưa có quy tắc ngày). */
 export function makeDayRules(day, rng) {
   const used = { cats: [] };
-  const types = shuffle(rng, Object.keys(RULE_BUILDERS)).slice(0, day <= 2 ? 2 : 3);
+  const types = shuffle(rng, Object.keys(RULE_BUILDERS)).slice(0, unlocksFor(day).rules);
   return types.map((t) => RULE_BUILDERS[t](rng, used));
 }
 
@@ -77,18 +95,19 @@ const DOC_LABEL = { entry_permit: 'Giấy phép nhập cảnh', work_permit: 'Gi
 /**
  * Trả về danh sách vi phạm của một khách: [{ sev: 'DENY'|'ARREST', text, doc }].
  * doc = giấy tờ chứa vi phạm (tab giao diện); null = vi phạm giấu kín, chỉ lộ qua soi chiếu/thẩm vấn.
- * ctx = { date, rules }
+ * ctx = { date, rules, docs? } — docs: Set giấy tờ đã mở khóa; giấy chưa mở thì không xét.
  */
 export function checkRules(npc, ctx) {
   const d = npc.documents;
   const p = d.passport;
   const v = [];
+  const has = (doc) => !!d[doc] && (!ctx.docs || ctx.docs.has(doc));
 
   // Luật thường trực
   if (p.expiry_date <= ctx.date) v.push({ sev: 'DENY', doc: 'passport', text: `Hộ chiếu hết hạn (${p.expiry_date})` });
 
   for (const doc of ['entry_permit', 'work_permit', 'customs']) {
-    if (!d[doc]) continue;
+    if (!has(doc)) continue;
     for (const f of ['name', 'id_number', 'dob']) {
       if (d[doc][f] === undefined) continue;
       if (d[doc][f] !== p[f]) {
@@ -104,6 +123,7 @@ export function checkRules(npc, ctx) {
   // Quy tắc của ngày
   const purpose = d.entry_permit?.purpose;
   for (const r of ctx.rules) {
+    if (['BAN_CATEGORY', 'CASH_LIMIT'].includes(r.type) && !has('customs')) continue;
     if (r.type === 'BAN_CATEGORY') {
       const hit = d.customs.items.filter((i) => i.category === r.category);
       if (hit.length) v.push({ sev: 'DENY', doc: 'customs', text: `Mang vật phẩm bị cấm nhóm "${r.category}": ${hit.map((i) => i.name).join(', ')}` });
@@ -119,7 +139,7 @@ export function checkRules(npc, ctx) {
     } else if (r.type === 'BAN_ORIGIN') {
       if (p.origin.includes(r.region)) v.push({ sev: 'DENY', doc: 'passport', text: `Đến từ khu vực đang tạm dừng nhập cảnh: ${r.region}` });
     } else if (r.type === 'CASH_LIMIT') {
-      if (d.customs.cash > r.limit) v.push({ sev: 'DENY', doc: 'customs', text: `Mang ${d.customs.cash} tiền mặt, vượt mức $${r.limit}` });
+      if (d.customs.cash > r.limit) v.push({ sev: 'DENY', doc: 'customs', text: `Mang $${d.customs.cash} tiền mặt, vượt mức $${r.limit}` });
     }
   }
   return v;

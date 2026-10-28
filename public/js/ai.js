@@ -60,6 +60,34 @@ export async function interrogate(npc, question, { date, aiOnline }) {
   return { ...offlineReply(npc, question), source: 'offline' };
 }
 
+const INSPECTOR_REACT = {
+  ok: ['Ừm.', 'Được.', 'Khớp hồ sơ.'],
+  wrong: ['Lạ nhỉ, hồ sơ không ghi thế.', 'Anh/chị chắc chứ? Giấy tờ nói khác đấy.', 'Hửm? Nói lại xem nào.'],
+  slip: ['Khoan... anh/chị vừa nói gì?', 'Cái tên đó ở đâu ra vậy?', 'Thú vị đấy. Nói thêm đi.'],
+};
+
+/** Màn đổi vai: thanh tra biên phòng (AI) phản ứng với câu trả lời của người chơi rồi hỏi tiếp. */
+export async function inspectorReply({ cover, asked, answer, verdict, next, aiOnline }) {
+  if (aiOnline) {
+    try {
+      const res = await fetch('/api/interrogate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(15000),
+        body: JSON.stringify({ mode: 'inspector', cover, asked, verdict, next, question: answer || '(im lặng)' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.dialogue) return { dialogue: data.dialogue, emotion: EMOTIONS.includes(data.emotion) ? data.emotion : 'calm', source: 'ai' };
+      }
+    } catch {
+      /* rơi xuống kịch bản */
+    }
+  }
+  const react = INSPECTOR_REACT[verdict][Math.floor(Math.random() * 3)];
+  return { dialogue: next ? `${react} ${next}` : `${react} Đứng yên đó.`, emotion: verdict === 'ok' ? 'calm' : 'angry', source: 'offline' };
+}
+
 // ---------------- Kịch bản offline ----------------
 
 const INTENTS = [

@@ -4,9 +4,9 @@ import { chance, pick, shuffle } from './util.js';
 // ---------------- Cấp bậc & uy tín ----------------
 export const RANKS = [
   { name: 'Thanh tra tập sự', rep: 0, pay: 50 },
-  { name: 'Thanh tra', rep: 6, pay: 55 },
-  { name: 'Thanh tra chính', rep: 14, pay: 60 },
-  { name: 'Thanh tra trưởng', rep: 24, pay: 70 },
+  { name: 'Thanh tra', rep: 5, pay: 55 },
+  { name: 'Thanh tra chính', rep: 11, pay: 60 },
+  { name: 'Thanh tra trưởng', rep: 18, pay: 70 },
 ];
 export const REP = { correct: 1, arrest: 1, wrong: -2 }; // bắt giữ đúng = correct + arrest
 
@@ -36,29 +36,33 @@ export const DAY_MODS = {
   blackout: { icon: '🔌', name: 'Mất điện toàn trạm', desc: 'Không máy soi, vân tay, máy đối chiếu, máy nói dối. Phụ cấp lương ×1.5.', payMult: 1.5, noScan: true, noPrint: true, noGadgets: true },
 };
 
-// Ngày cuối chương 2 — không ngẫu nhiên
-export const BOSS_DAY = { key: 'bossday', icon: '🐉', name: 'Ngày của Hắc Long', desc: 'Tin mật: trùm Hắc Long sẽ qua quầy 7 hôm nay dưới danh tính giả. Đối chiếu bảng ghim manh mối để nhận ra hắn — bắt được trùm thưởng $500.' };
+// Ngày cốt truyện: không ngẫu nhiên, mỗi ngày một cú ngoặt
+export const STORY_DAYS = {
+  5: { key: 'directive', icon: '✉️', name: 'Chỉ thị mật của Trưởng trạm', desc: 'Sáng nay trên bàn có một phong bì niêm phong từ Trưởng trạm Tạ Văn Quyền. Đọc kỹ trước khi mở cửa trạm.' },
+  6: { key: 'kidnap', icon: '🧣', name: 'Bé Na mất tích', desc: 'Kẻ bắt cóc sẽ đến quầy 7 hôm nay — người đeo khăn đỏ. Cho hắn qua thì con về; bắt hắn thì phải tự tìm ra con ở đâu.' },
+  7: { key: 'boss', icon: '🐉', name: 'Ngày của Hắc Long', desc: 'Tin mật: trùm Hắc Long sẽ qua quầy 7 hôm nay dưới danh tính giả. Đối chiếu bảng ghim manh mối để nhận ra hắn — bắt được trùm thưởng $500. Đêm nay cả nhà phải rời Neo-Saigon.' },
+};
 export const BOSS_BOUNTY = 500;
+export const DIRECTIVE_REWARD = 300; // phong bì "cảm ơn" của Trưởng trạm nếu nghe lời
+export const DIRECTIVE_PENALTY = 100; // trừ lương nếu cãi lệnh (kèm 1 cảnh cáo)
 
 /**
- * Lên lịch ngày đặc biệt cho một chương (ngày 1 luôn bình thường, mỗi loại tối đa 1 lần).
- * Chương cuối dành ngày cuối cho Hắc Long. Trả về mảng key theo ngày: out[day - 1].
+ * Ngày đặc biệt ngẫu nhiên: tối đa 1 lần mỗi ván, rơi vào ngày 2–4 (ngày 5–7 dành cho cốt truyện).
+ * Trả về mảng key theo ngày: out[day - 1].
  */
-export function planDayMods(rng, totalDays, chapter = 1, lastChapter = 2) {
-  const pool = shuffle(rng, Object.keys(DAY_MODS));
-  const out = [null];
-  for (let d = 2; d <= totalDays; d++) out.push(chance(rng, 0.7) && pool.length ? pool.pop() : null);
-  if (chapter === lastChapter) out[totalDays - 1] = 'bossday';
+export function planDayMods(rng, totalDays) {
+  const out = Array(totalDays).fill(null);
+  if (chance(rng, 0.8)) out[pick(rng, [1, 2, 3])] = pick(rng, Object.keys(DAY_MODS));
   return out;
 }
 
-export const dayModFor = (key) => (key === 'bossday' ? BOSS_DAY : key ? { key, ...DAY_MODS[key] } : null);
+export const dayModFor = (day, key) => STORY_DAYS[day] || (key ? { key, ...DAY_MODS[key] } : null);
 
 // ---------------- Sự kiện ban đêm ----------------
 // Hiệu ứng của một lựa chọn: money, rep, mistakes, rent, warmHome, blessing, sick (tên người thân), gamble {p, win, lose}
 export const EVENTS = [
   {
-    key: 'stranger', title: 'Người lạ gõ cửa', photo: 'npc_201', maxDay: 4,
+    key: 'stranger', title: 'Người lạ gõ cửa', photo: 'npc_201', maxDay: 3,
     text: 'Nửa đêm, một gã đội mũ trùm dúi vào tay bạn $400 cùng tấm ảnh: "Ngày mai người này sẽ qua quầy 7. Cho hắn qua."',
     choices: [
       { key: 'take', label: 'Nhận tiền', money: 400, result: 'Bạn cất tiền. Tấm ảnh nằm trên bàn ăn suốt đêm. (Nếu mai không cho hắn qua, bọn chúng sẽ quay lại.)' },
@@ -142,9 +146,25 @@ export const EVENTS = [
   },
 ];
 
-/** Chọn sự kiện cho đêm nay (mỗi sự kiện tối đa 1 lần/ván). Không có sự kiện sau ngày cuối. */
-export function pickEvent(rng, g, totalDays) {
-  if (g.day >= totalDays) return null;
+// Đêm ngày 5: bé Na bị bắt cóc — sự kiện bắt buộc, lời nhắn tùy việc bạn nghe hay cãi lệnh Trưởng trạm
+export function kidnapEvent(g) {
+  const obeyed = g.flags.directive?.choice === 'obey';
+  return {
+    key: 'kidnap', title: 'Bé Na không về nhà', photo: 'npc_402', forced: true,
+    text: (obeyed
+      ? 'Bạn đã nghe lời, nhưng Hắc Long muốn chắc chắn bạn sẽ ngoan ngoãn mãi. '
+      : 'Vì bạn dám chặn người của Trưởng trạm, Hắc Long quyết định dạy bạn một bài học. ')
+      + 'Tối nay bé Na không về. Trong hộp thư có mẩu giấy: "Ngày mai, cho người đeo khăn đỏ qua quầy 7. Không báo công an. — HL"',
+    choices: [
+      { key: 'comply', label: 'Làm theo yêu cầu', result: 'Bạn ngồi thức trắng bên chiếc cặp sách của bé Na.' },
+      { key: 'report', label: 'Báo công an', rep: 1, result: 'Công an dặn: "Nếu bắt được gã khăn đỏ, hãy đưa vào phòng thẩm vấn — hắn biết con bé ở đâu."' },
+    ],
+  };
+}
+
+/** Chọn sự kiện ngẫu nhiên cho đêm nay (đêm 1–4; mỗi sự kiện tối đa 1 lần/ván). Từ đêm 5 là cốt truyện. */
+export function pickEvent(rng, g) {
+  if (g.day >= 5) return null;
   const pool = EVENTS.filter((e) => !g.eventsSeen.includes(e.key) && (!e.maxDay || g.day <= e.maxDay) && (!e.when || e.when(g)));
   return pool.length ? pick(rng, pool) : null;
 }
@@ -166,7 +186,7 @@ export function applyChoice(g, event, choice, rng) {
     const m = g.family.find((x) => x.name === eff.sick && x.alive);
     if (m && !m.sick) m.sick = 1;
   }
-  g.flags[event.key] = { choice: choice.key, day: g.absDay ?? g.day }; // ngày tuyệt đối, để khách quen vắt qua chương
+  g.flags[event.key] = { choice: choice.key, day: g.day };
   g.eventsSeen.push(event.key);
   return eff.result;
 }

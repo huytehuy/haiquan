@@ -107,13 +107,42 @@
       </div>
     </section>
 
+    <!-- Đêm cuối: đổi vai — bạn là người bị hỏi vặn ở cửa khẩu Cầu Phú Mỹ -->
+    <section id="screen-escape" class="screen">
+      <header class="hud escape-hud">
+        <div class="hud-item"><b>CỬA KHẨU CẦU PHÚ MỸ</b><small>23:40 · đêm cuối</small></div>
+        <div class="hud-item right"><small>Nghi ngờ</small><b id="esc-sus">○○</b></div>
+      </header>
+      <div class="camera escape-cam">
+        <div class="cam-label">TRẠM BIÊN PHÒNG · CỔNG 2 <span class="rec">● REC</span></div>
+        <div class="npc-wrap">
+          <div class="npc" id="esc-npc"></div>
+          <div class="nameplate">THANH TRA BIÊN PHÒNG</div>
+        </div>
+        <div class="speech" id="esc-speech">
+          <div class="speech-q" id="esc-q"></div>
+          <div class="speech-a" id="esc-a"></div>
+        </div>
+      </div>
+      <div class="desk">
+        <div class="desk-bar"><nav class="tabs"><span class="tab active" style="--tab-color:#e9dcc0">Hộ chiếu của bạn</span></nav></div>
+        <div class="doc-view" id="esc-desk"></div>
+        <div class="stamp-layer" id="esc-stamp"></div>
+      </div>
+      <div class="controls">
+        <p class="esc-hint">Trả lời theo danh tính mới. Lỡ miệng nhắc tên thật của con, nghề thanh tra hay Hắc Long là bị nghi ngay.</p>
+        <form class="ask" id="esc-form" autocomplete="off">
+          <input id="esc-input" maxlength="150" placeholder="Trả lời thanh tra…" enterkeyhint="send">
+          <button class="btn send" type="submit">Trả lời</button>
+        </form>
+        <button class="btn primary" id="esc-next" hidden>Xem kết thúc ▶</button>
+      </div>
+    </section>
+
     <!-- Kết thúc -->
     <section id="screen-end" class="screen">
       <div class="scroll-area"><div id="end-content"></div></div>
-      <div class="bottom-actions">
-        <button class="btn primary" id="btn-chapter2" hidden>Chương 2: Ba tháng sau ▶</button>
-        <button class="btn ghost" id="btn-restart">Về màn hình chính</button>
-      </div>
+      <div class="bottom-actions"><button class="btn primary" id="btn-restart">Về màn hình chính</button></div>
     </section>
 
     <div class="modal" id="modal" hidden>

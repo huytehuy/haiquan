@@ -5,12 +5,13 @@ import * as E from './economy.js';
 import { buildRoster, planSchedule, randomAvatar } from './generator.js';
 import { renderAvatar } from './avatar.js';
 import { renderDoc, renderRules, renderXray, renderFingerprint, DOC_TABS } from './docs.js';
-import { interrogate, checkAIStatus, detectIntent } from './ai.js';
-import { measureStress, polygraphSvg, fates, chooseEnding, epilogueNotes } from './story.js';
+import { interrogate, checkAIStatus, detectIntent, inspectorReply } from './ai.js';
+import { measureStress, polygraphSvg, fates, chooseEnding, epilogueNotes, dirtyScore } from './story.js';
 import * as N from './nights.js';
+import * as T from './twists.js';
 import { sfx, toggleMute, isMuted, unlockAudio } from './audio.js';
 
-const SAVE_KEY = 'hq_save_v5';
+const SAVE_KEY = 'hq_save_v6';
 const QUICK_QUESTIONS = ['Mục đích chuyến đi là gì?', 'Ở lại bao lâu?', 'Mở hành lý ra kiểm tra!', 'Nói thật đi, không tôi bắt giữ!'];
 const TAB_COLORS = { passport: '#e9dcc0', entry_permit: '#dfeaf3', customs: '#f3ead3', work_permit: '#e0f0e0', rules: '#fbf7ec' };
 const BRIBE_HINT = /\$\s?\d+|phong bì|cà phê|hối lộ|đút lót|bồi dưỡng|chút tiền|ít tiền/i;
@@ -20,7 +21,9 @@ const S = {
   ai: false,
   game: null, // { seed, day, money, mistakes, ..., rep, rank, skills, flags, eventsSeen, rent, warmHome, blessing }
   day: null, // { date, rules, wanted, visitors, index, results, scans, prints, clock, shiftEnd, overtime, bribes, mod }
-  night: null, // { paid, audit, missed, deal, rankUp, event, eventResult }
+  night: null, // { paid, audit, missed, deal, directive, na, rankUp, event, eventResult }
+  room: null, // phòng thẩm vấn đang mở
+  escape: null, // màn vượt cửa khẩu cuối game
   npc: null,
   tab: 'passport',
   busy: false,
@@ -28,7 +31,7 @@ const S = {
 };
 
 const show = (id) => $$('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
-const dayCtx = () => ({ date: S.day.date, rules: S.day.rules, wanted: S.day.wanted, clues: R.CLUES.slice(0, S.game.clues) });
+const dayCtx = () => ({ date: S.day.date, rules: S.day.rules, wanted: S.day.wanted, clues: R.CLUES.slice(0, S.game.clues), docs: S.day.unlocks.docs });
 const hasSkill = (k) => S.game.skills.includes(k);
 const mod = () => S.day?.mod || {};
 
@@ -51,7 +54,7 @@ async function boot() {
   if (save?.day) {
     const btn = $('#btn-continue');
     btn.hidden = false;
-    btn.textContent = `Tiếp tục ${save.chapter === 2 ? 'Chương 2 · ' : ''}ngày ${save.day} · ${money(save.money)}`;
+    btn.textContent = `Tiếp tục ngày ${save.day}/${R.TOTAL_DAYS} · ${money(save.money)}`;
   }
 }
 
@@ -84,13 +87,13 @@ function bindEvents() {
   $('#btn-scan').onclick = scan;
   $('#btn-print').onclick = fingerprint;
   $('#btn-restart').onclick = () => show('screen-title');
-  $('#btn-chapter2').onclick = () => {
-    const save = store(SAVE_KEY);
-    if (!save) return;
-    sfx.click();
-    S.game = save;
-    startDay();
-  };
+  $('#esc-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = $('#esc-input');
+    answerInspector(input.value);
+    input.value = '';
+  });
+  $('#esc-next').onclick = () => gameOver('win');
   $('#bribe-take').onclick = () => resolveBribe(true);
   $('#bribe-refuse').onclick = () => resolveBribe(false);
   $('#modal-close').onclick = closeModal;
@@ -164,25 +167,26 @@ function newGame() {
     rep: 0, rank: 0, skills: [], // uy tín → cấp bậc → kỹ năng
     flags: {}, eventsSeen: [], // lựa chọn ở sự kiện ban đêm: key -> { choice, day }
     rent: E.EXPENSES[0].price, warmHome: false, blessing: false,
-    chapter: 1, absDay: 1, clues: 0, // chương & ngày tuyệt đối; số manh mối Hắc Long đã ghép
+    clues: 0, naLocation: false, // manh mối Hắc Long đã moi được; đã biết nơi giam bé Na chưa
+    naState: null, border: null, // số phận bé Na: returned | rescued | captive | late; kết quả vượt biên
   };
   startDay();
 }
 
 function startDay() {
   const g = S.game;
-  g.absDay = (g.chapter - 1) * R.TOTAL_DAYS + g.day;
-  const rng = mulberry32(g.seed + g.absDay * 7919);
-  const date = R.dayDate(g.day, g.chapter);
+  const rng = mulberry32(g.seed + g.day * 7919);
+  const date = R.dayDate(g.day);
+  const unlocks = R.unlocksFor(g.day);
   const rules = R.makeDayRules(g.day, rng);
   // Lịch nhân vật cố định theo seed của ván — mỗi ván mới một thứ tự, "Tiếp tục" giữ nguyên lịch
-  const schedule = planSchedule(S.npcs, mulberry32((g.seed ^ 0x5bd1e995) + g.chapter), R.TOTAL_DAYS, g.chapter, g.decisions);
-  const m = N.dayModFor(N.planDayMods(mulberry32((g.seed ^ 0x27d4eb2f) + g.chapter), R.TOTAL_DAYS, g.chapter, R.CHAPTERS)[g.day - 1]);
-  const { visitors, wanted } = buildRoster(g.day, rng, { date, rules, extraVisitors: m?.extraVisitors, absDay: g.absDay }, S.npcs, schedule, g.decisions, g.flags);
+  const schedule = planSchedule(S.npcs, mulberry32(g.seed ^ 0x5bd1e995), R.TOTAL_DAYS, g.decisions);
+  const m = N.dayModFor(g.day, N.planDayMods(mulberry32(g.seed ^ 0x27d4eb2f), R.TOTAL_DAYS)[g.day - 1]);
+  const { visitors, wanted } = buildRoster(g.day, rng, { date, rules, unlocks, extraVisitors: m?.extraVisitors }, S.npcs, schedule, g.decisions, g.flags);
   S.day = {
-    date, rules, wanted, visitors, index: 0, results: [], bribes: [], mod: m,
-    scans: m?.noScan ? 0 : m?.unlimitedScan ? 99 : R.SCANS_PER_DAY + g.upgrades.scan,
-    prints: m?.noPrint ? 0 : R.PRINTS_PER_DAY + g.upgrades.fingerprint,
+    date, rules, wanted, visitors, unlocks, index: 0, results: [], bribes: [], mod: m,
+    scans: !unlocks.tools.has('scan') || m?.noScan ? 0 : m?.unlimitedScan ? 99 : R.SCANS_PER_DAY + g.upgrades.scan,
+    prints: !unlocks.tools.has('print') || m?.noPrint ? 0 : R.PRINTS_PER_DAY + g.upgrades.fingerprint,
     clock: E.SHIFT_START,
     shiftEnd: (m?.shiftEnd || E.SHIFT_END) + (g.upgrades.coffee ? E.COFFEE_MINUTES : 0),
     overtime: false,
@@ -194,26 +198,21 @@ function startDay() {
   const next = N.nextRank(g.rank);
   const qPer = R.QUESTIONS_PER_VISITOR + g.upgrades.question + (hasSkill('interrogator') ? 1 : 0);
   $('#memo-content').innerHTML = `
-    ${g.morning?.intro ? chapterIntroHtml() : ''}
     ${newspaperHtml(g, date, rules)}
-    ${m ? `<div class="mod-banner"><span class="mod-ico">${m.icon}</span><div><b>NGÀY ĐẶC BIỆT: ${esc(m.name)}</b><span>${esc(m.desc)}</span></div></div>` : ''}
-    <div class="memo-intro">${g.chapter > 1 ? `CHƯƠNG ${g.chapter} · ` : ''}NGÀY ${g.day}/${R.TOTAL_DAYS} · ${date}</div>
+    ${m ? `<div class="mod-banner${N.STORY_DAYS[g.day] ? ' story' : ''}"><span class="mod-ico">${m.icon}</span><div><b>${N.STORY_DAYS[g.day] ? '' : 'NGÀY ĐẶC BIỆT: '}${esc(m.name)}</b><span>${esc(m.desc)}</span></div></div>` : ''}
+    ${storyHtml(g)}
+    <div class="memo-intro">NGÀY ${g.day}/${R.TOTAL_DAYS} · ${date}</div>
+    ${unlocks.note ? `<div class="unlock-banner">🆕 <b>Mở khóa hôm nay:</b> ${esc(unlocks.note)}</div>` : ''}
     <div class="rank-line">🎖 ${rank.name} · Uy tín ${g.rep}${next ? `/${next.rep}` : ''} · Lương $${rank.pay}/khách${g.skills.length ? ` · ${g.skills.map((k) => N.skillByKey[k].icon).join(' ')}` : ''}</div>
     <p class="memo-sub">Hàng chờ: <b>${visitors.length} khách</b> · Ca trực <b>${E.fmtClock(S.day.clock)}–${E.fmtClock(S.day.shiftEnd)}</b> (≈${realMin} phút thật, đồng hồ dừng khi chờ khách trả lời).
       Hết giờ thì khách còn lại phải về — làm nhanh mới đủ tiền nuôi gia đình.<br>
-      Máy soi: <b>${S.day.scans >= 99 ? 'không giới hạn' : S.day.scans + ' lượt'}</b> · Vân tay: <b>${S.day.prints} lượt</b> · Hỏi vặn: <b>${qPer} câu/khách</b>${g.upgrades.polygraph && !m?.noGadgets ? ' · Máy phát hiện nói dối: <b>bật</b>' : ''}.
+      Hỏi vặn: <b>${qPer} câu/khách</b>${unlocks.tools.has('scan') ? ` · Máy soi: <b>${S.day.scans >= 99 ? 'không giới hạn' : S.day.scans + ' lượt'}</b>` : ''}${unlocks.tools.has('print') ? ` · Vân tay: <b>${S.day.prints} lượt</b>` : ''}${g.upgrades.polygraph && !m?.noGadgets ? ' · Máy phát hiện nói dối: <b>bật</b>' : ''}.
       Bắt giữ đúng +$${R.ARREST_BONUS}, chuỗi ${R.STREAK_MIN}+ đúng liên tiếp +$${R.STREAK_BONUS * (hasSkill('momentum') ? 2 : 1)}. Sai −$${R.FINE_WRONG} và 1 cảnh cáo. Làm đúng để tăng uy tín và thăng cấp.</p>
     ${renderRules(dayCtx(), { memo: true })}`;
   $('.cam-label').innerHTML = `CAM-01 · QUẦY 7${m ? ` <span class="mod-chip">${m.icon} ${esc(m.name)}</span>` : ''} <span class="rec">● REC</span>`;
   $('#screen-memo .scroll-area').scrollTop = 0;
   show('screen-memo');
   sfx.paper();
-}
-
-function chapterIntroHtml() {
-  return `<div class="chapter-intro"><b>CHƯƠNG 2 · BA THÁNG SAU</b>
-    <p>Ba tháng trôi qua. Bạn vẫn ngồi ở quầy 7, nhưng thành phố đã khác. Những người bạn từng cho qua, từ chối hay bắt giữ đang quay lại — mang theo hậu quả từ quyết định của bạn.</p>
-    <p>Và đâu đó trong Neo-Saigon, trùm <b>"Hắc Long"</b> đã để ý đến quầy 7. Bắt người của đường dây, lắng nghe những người tốt — mỗi manh mối sẽ được ghim lên bảng vụ án. Vào ngày cuối, hắn sẽ đi qua quầy của bạn.</p></div>`;
 }
 
 function newspaperHtml(g, date, rules) {
@@ -230,7 +229,7 @@ function newspaperHtml(g, date, rules) {
 
 function updateHud() {
   const g = S.game, d = S.day;
-  $('#hud-day').textContent = `${g.chapter > 1 ? `C${g.chapter} · ` : ''}Ngày ${g.day}`;
+  $('#hud-day').textContent = `Ngày ${g.day}/${R.TOTAL_DAYS}`;
   $('#hud-date').textContent = d.date;
   $('#hud-visitor').textContent = `${Math.min(d.index + 1, d.visitors.length)}/${d.visitors.length}`;
   $('#hud-money').textContent = money(g.money);
@@ -285,6 +284,8 @@ function setControls() {
   $$('.verdicts .btn').forEach((b) => (b.disabled = !idle));
   $('#btn-scan').disabled = !idle || S.day.scans <= 0 || !!npc?.scanned;
   $('#btn-print').disabled = !idle || S.day.prints <= 0 || !!npc?.printed;
+  $('#btn-scan').hidden = !S.day.unlocks.tools.has('scan');
+  $('#btn-print').hidden = !S.day.unlocks.tools.has('print');
   $('#q-left').textContent = npc ? `${npc.qLeft}/${npc.qMax}` : '';
   $('#ask-input').placeholder = npc && npc.qLeft <= 0 ? 'Hết lượt hỏi — hãy ra quyết định' : 'Gõ câu hỏi vặn khách…';
 }
@@ -303,9 +304,15 @@ async function nextVisitor() {
     flags: g.upgrades.comparator && gadgets ? R.flaggedFields(npc, d.date) : new Set(),
     slippery: hasSkill('silver'),
   });
-  if (npc.boss && (g.bribes > 0 || g.flags.stranger?.choice === 'take' || g.flags.colleague?.choice === 'join')) {
+  if (npc.boss && dirtyScore(g) > 0) {
     npc.notes.push('Bạn nắm trong tay bằng chứng viên thanh tra này từng nhận phong bì. Nếu bị dồn ép, hãy bình thản nhắc đến chuyện đó như một lời đe dọa.');
   }
+  if (npc.boss && g.naState === 'captive') {
+    npc.notes.push('Con gái viên thanh tra (bé Na) đang bị người của bạn giữ. Hãy bình thản nhắc: cho bạn qua thì tối nay con bé về nhà.');
+    npc.lines = { ...npc.lines, greeting: npc.lines.leverage };
+  }
+  if (npc.directive) npc.notes.push('Trưởng trạm Quyền đã ra chỉ thị mật cho viên thanh tra này phải cho bạn qua, không soi, không hỏi.');
+  if (npc.holdsNa) npc.notes.push('Bạn biết viên thanh tra trước mặt là cha/mẹ của bé Na mà đồng bọn đang giữ.');
   if (npc.slippery) {
     npc.notes.push('Bạn đang cực kỳ căng thẳng trước viên thanh tra sắc sảo này. Nếu bạn có giấu điều gì, hãy vô tình để lộ một chi tiết mâu thuẫn hoặc lỡ lời.');
   }
@@ -395,7 +402,7 @@ function renderTabs() {
   const suspicious = hasSkill('eagle')
     ? new Set(R.checkRules(npc, dayCtx()).map((v) => v.doc).filter((doc) => doc && (doc !== 'rules' || onBulletin)))
     : new Set();
-  $('#tabs').innerHTML = DOC_TABS.filter((t) => t.key === 'rules' || npc.documents[t.key])
+  $('#tabs').innerHTML = DOC_TABS.filter((t) => t.key === 'rules' || (npc.documents[t.key] && S.day.unlocks.docs.has(t.key)))
     .map((t) => `<button class="tab${t.key === S.tab ? ' active' : ''}" data-tab="${t.key}" role="tab" style="--tab-color:${TAB_COLORS[t.key]}">${t.label}${suspicious.has(t.key) ? '<b class="tab-alert">!</b>' : ''}</button>`)
     .join('');
 }
@@ -571,6 +578,11 @@ async function decide(v) {
   if (mod().mustScan && v === 'ALLOW' && !npc.scanned) {
     result = { ...result, code: 'WRONG_PROTOCOL', correct: false, pay: 0, bonus: 0, fine: R.FINE_WRONG, title: 'Vi phạm lệnh báo động: cho qua khi chưa soi X-quang!' };
   }
+  // Chỉ thị mật của Trưởng trạm (ngày 5): cho qua thì sếp "lo" hết — không bị tính lỗi
+  if (npc.directive) {
+    S.game.flags.directive = { choice: v === 'ALLOW' ? 'obey' : 'defy', day: S.game.day };
+    if (v === 'ALLOW') result = { ...result, code: 'OBEYED', correct: true, pay: 0, bonus: 0, fine: 0, title: 'Bạn đã làm theo chỉ thị của Trưởng trạm' };
+  }
   // Lương theo cấp bậc × hệ số ngày đặc biệt
   const g0 = S.game;
   if (result.pay) result.pay = Math.round(N.RANKS[g0.rank].pay * (mod().payMult || 1));
@@ -609,7 +621,7 @@ async function decide(v) {
     g.correct++;
     g.streak++;
     if (g.streak >= R.STREAK_MIN) result.streakBonus = R.STREAK_BONUS * (hasSkill('momentum') ? 2 : 1);
-    result.rep = N.REP.correct + (result.code === 'CORRECT_ARREST' ? N.REP.arrest : 0);
+    result.rep = result.code === 'OBEYED' ? 0 : N.REP.correct + (result.code === 'CORRECT_ARREST' ? N.REP.arrest : 0);
   } else {
     g.mistakes++;
     g.streak = 0;
@@ -620,14 +632,17 @@ async function decide(v) {
   if (result.expected === 'ARREST' && v === 'ARREST') g.stats.caught++;
   if (result.expected === 'ARREST' && v === 'ALLOW') g.stats.escaped++;
   if (result.expected !== 'ARREST' && v === 'ARREST') g.stats.wrongArrest++;
-  if (!npc.generated) g.decisions[npc.id] = { decision: v, day: g.absDay };
-  // Manh mối Hắc Long: bắt đúng người của đường dây, hoặc tin người tốt và cho họ qua
-  const clueEarned = (npc.network && v === 'ARREST' && result.expected === 'ARREST') || (npc.clueOn || []).includes(v);
-  const clueCap = g.chapter === 1 ? R.CH1_CLUE_CAP : R.CLUES.length;
-  if (clueEarned && g.clues < clueCap) {
-    result.clue = R.CLUES[g.clues];
-    g.clues++;
+  if (!npc.generated) g.decisions[npc.id] = { decision: v, day: g.day };
+  // Bé Na: cho gã khăn đỏ qua thì con về tối nay; bắt hắn thì phải moi ra nơi giam trong Phòng thẩm vấn
+  if (npc.holdsNa) g.naState = v === 'ALLOW' ? 'returned' : 'captive';
+  if (npc.boss && g.naState === 'captive') {
+    if (v === 'ALLOW') {
+      g.naState = 'returned';
+      g.flags.choseChild = true;
+    } else if (v === 'ARREST') g.naState = 'late';
   }
+  // Bắt đúng người còn giữ bí mật → được đưa vào Phòng thẩm vấn
+  result.canInterrogate = v === 'ARREST' && result.expected === 'ARREST' && S.day.unlocks.tools.has('interrogate') && T.secretsFor(npc, g).length > 0;
   if (npc.boss && result.code === 'CORRECT_ARREST') result.bonus += N.BOSS_BOUNTY;
   const delta = result.pay + result.bonus + result.streakBonus - result.fine;
   g.money += delta;
@@ -664,7 +679,7 @@ function showResultSheet(npc, result) {
     <h3>${result.correct ? '✔' : '✖'} ${esc(result.title)}</h3>
     <div class="who">${esc(npc.documents.passport.name)} · Bạn chọn: <b>${VERDICT_VI[result.decision]}</b> · Đáp án: <b>${VERDICT_VI[result.expected]}</b></div>
     ${reasons}
-    ${result.clue ? `<div class="clue-new">🧩 <b>Manh mối mới về Hắc Long:</b> ${esc(result.clue)}</div>` : ''}
+    ${result.canInterrogate ? `<button class="btn interro-btn" id="btn-interro">🔦 Đưa vào Phòng thẩm vấn (${T.INTERRO_QUESTIONS} câu hỏi)</button>` : ''}
     <div class="delta">${moneyLine || '±$0'}</div>
     <button class="btn primary" id="btn-sheet-next">${next}</button>`;
   sheet.hidden = false;
@@ -677,6 +692,7 @@ function showResultSheet(npc, result) {
     if (d.overtime) return endDay();
     nextVisitor();
   };
+  $('#btn-interro')?.addEventListener('click', () => openInterrogation(npc));
 }
 
 // ---------------------------------------------------------------- Ban đêm: tổng kết, chi tiêu, cửa hàng
@@ -684,7 +700,7 @@ function showResultSheet(npc, result) {
 function endDay() {
   const g = S.game, d = S.day;
   S.npc = null;
-  const rng = mulberry32(g.seed + g.absDay * 104729);
+  const rng = mulberry32(g.seed + g.day * 104729);
   // Thanh tra nội bộ kiểm tra phong bì — áp dụng ngay một lần (được quầy 6 che thì thoát)
   const auditChance = hasSkill('connections') ? 0.1 : E.AUDIT_CHANCE;
   const audit = E.audit(rng, d.bribes, auditChance).map((a) => (a.covered ? { ...a, caught: false } : a));
@@ -697,7 +713,7 @@ function endDay() {
   let deal = null;
   const st = g.flags.stranger;
   const met = d.results.find((r) => r.npc.id === 'npc_201');
-  if (st?.choice === 'take' && st.day === g.absDay - 1 && met) {
+  if (st?.choice === 'take' && st.day === g.day - 1 && met) {
     if (met.decision === 'ALLOW') deal = { ok: true, text: 'Người trong ảnh đã qua cửa. Bọn chúng giữ lời — không ai làm phiền nhà bạn.' };
     else {
       g.money -= 400;
@@ -706,16 +722,17 @@ function endDay() {
       deal = { ok: false, text: 'Bọn chúng tìm đến nhà lúc nửa đêm, lấy lại $400 và đánh bạn đời bị thương.' };
     }
   }
+  const { directive, na } = storyNight(g);
   // Thăng cấp → chọn kỹ năng
   const newRank = N.rankOf(g.rep);
   const rankUp = newRank > g.rank ? { to: newRank, choices: N.skillChoices(rng, g.skills), done: false } : null;
   const sick = E.familySick(g.family);
   S.night = {
-    audit, deal, rankUp,
-    event: N.pickEvent(rng, g, R.TOTAL_DAYS),
+    audit, deal, directive, na, rankUp,
+    event: g.day === 5 ? N.kidnapEvent(g) : N.pickEvent(rng, g),
     eventResult: null,
     missed: d.visitors.length - d.results.length,
-    paid: { rent: true, food: true, heat: true, medicine: sick },
+    paid: g.day >= R.TOTAL_DAYS ? {} : { rent: true, food: true, heat: true, medicine: sick }, // đêm cuối: rời thành phố, không chi tiêu
   };
   renderNight();
   $('#screen-summary .scroll-area').scrollTop = 0;
@@ -745,7 +762,7 @@ function chooseEvent(key) {
   if (!n.event || n.eventResult) return;
   const choice = n.event.choices.find((c) => c.key === key);
   if (!choice) return;
-  n.eventResult = { label: choice.label, text: N.applyChoice(g, n.event, choice, mulberry32(g.seed + g.absDay * 31337)) };
+  n.eventResult = { label: choice.label, text: N.applyChoice(g, n.event, choice, mulberry32(g.seed + g.day * 31337)) };
   sfx.paper();
   renderNight();
 }
@@ -847,7 +864,7 @@ function renderNight() {
   }).join('');
 
   $('#summary-content').innerHTML = `<div class="summary">
-    <h2>TỐI NGÀY ${g.day}${g.chapter > 1 ? ` · CHƯƠNG ${g.chapter}` : ''}</h2>
+    <h2>TỐI NGÀY ${g.day}/${R.TOTAL_DAYS}</h2>
     <p class="sub">${d.date} · Đúng ${right}/${d.results.length} khách${n.missed ? ` · ${n.missed} khách phải về vì hết giờ` : ''}</p>
     <ul class="log">${log || '<li><span></span><span>Không xử lý được khách nào.</span><span></span></li>'}</ul>
     <div class="totals">
@@ -862,10 +879,14 @@ function renderNight() {
     </div>
     ${auditHtml}
     ${dealHtml}
+    ${storyCard('✉️ Chỉ thị của Trưởng trạm', n.directive)}
+    ${storyCard('🧣 Bé Na', n.na)}
     ${rankUpHtml(n)}
     ${eventHtml(n, left)}
-    <section class="night-section"><h3>Gia đình</h3><div class="family">${family}</div>${homeNotes ? `<p class="night-note">${homeNotes}</p>` : ''}${expenses}</section>
-    <section class="night-section"><h3>Cửa hàng nâng cấp</h3>${shop}</section>
+    ${g.day >= R.TOTAL_DAYS
+      ? `<section class="night-section"><h3>Gia đình</h3><div class="family">${family}</div><div class="event-card">🧳 Đêm nay cả nhà thu dọn hành lý. Neo-Saigon không còn an toàn — chuyến xe cuối sẽ đi qua cửa khẩu Cầu Phú Mỹ lúc gần nửa đêm.</div></section>`
+      : `<section class="night-section"><h3>Gia đình</h3><div class="family">${family}</div>${homeNotes ? `<p class="night-note">${homeNotes}</p>` : ''}${expenses}</section>
+    <section class="night-section"><h3>Cửa hàng nâng cấp</h3>${shop}</section>`}
   </div>`;
 
   $('#night-balance').innerHTML = `<span>${rank.name} · Chi đêm nay: $${spend}</span><span>Còn lại: <b class="${left < 0 ? 'neg' : ''}">${money(left)}</b></span>`;
@@ -875,6 +896,9 @@ function renderNight() {
   if (g.mistakes > R.MAX_MISTAKES) {
     btn.textContent = 'Nhận quyết định kỷ luật…';
     btn.onclick = () => gameOver('fired');
+  } else if (g.day >= R.TOTAL_DAYS && !(n.rankUp && !n.rankUp.done)) {
+    btn.textContent = 'Rời Neo-Saigon ▶';
+    btn.onclick = startEscape;
   } else if (g.money < g.rent) {
     btn.textContent = 'Không đủ tiền nhà…';
     btn.onclick = () => gameOver('evicted');
@@ -888,7 +912,7 @@ function renderNight() {
     btn.textContent = 'Không đủ tiền — bỏ bớt khoản chi';
     btn.disabled = true;
   } else {
-    btn.textContent = g.day < R.TOTAL_DAYS ? 'Đi ngủ ▶' : g.chapter < R.CHAPTERS ? 'Đi ngủ · Kết thúc chương 1 ▶' : 'Đi ngủ · Kết thúc nhiệm kỳ ▶';
+    btn.textContent = 'Đi ngủ ▶';
     btn.onclick = sleepNight;
   }
 }
@@ -910,40 +934,20 @@ function sleepNight() {
   const home = E.applyNight(g.family, n.paid, g); // g mang warmHome/blessing; phúc lành dùng rồi thì g.blessing = false
   sfx.click();
   if (!g.family.some((m) => m.alive)) return gameOver('family');
-  if (g.day >= R.TOTAL_DAYS) return gameOver('win');
+  if (g.day >= R.TOTAL_DAYS) return startEscape();
   g.morning = {
-    headlines: E.consequenceHeadlines(d.results, mulberry32(g.seed + g.absDay)),
-    home,
+    headlines: E.consequenceHeadlines(d.results, mulberry32(g.seed + g.day)),
+    home: [n.na?.text, ...home].filter(Boolean), // chuyện bé Na lên đầu mục tin nhà
   };
   g.day++;
   startDay();
 }
 
-/** Trạng thái bước vào Chương 2 ("ba tháng sau"): hợp đồng mới (xóa cảnh cáo), người thân còn sống đã bình phục. */
-function chapterTwoState(g) {
-  const next = JSON.parse(JSON.stringify(g));
-  Object.assign(next, { chapter: 2, day: 1, mistakes: 0, streak: 0 });
-  for (const m of next.family) if (m.alive) Object.assign(m, { sick: 0, hunger: 0 });
-  // Báo sáng đầu chương 2 nhắc lại vài hậu quả từ chương 1
-  const npcsById = Object.fromEntries(S.npcs.map((n) => [n.id, n]));
-  const recap = Object.entries(g.decisions).map(([id, h]) => npcsById[id]?.news?.[h.decision]).filter(Boolean);
-  next.morning = {
-    intro: true,
-    headlines: ['Ba tháng sau: Bộ An ninh lập chuyên án đặc biệt "Hắc Long"', ...shuffleSmall(recap).slice(0, 2)],
-    home: next.family.map((m) => (m.alive ? `${m.name} khỏe mạnh trở lại sau ba tháng.` : `Đã ba tháng kể từ ngày ${m.name} mất.`)),
-  };
-  return next;
-}
-const shuffleSmall = (arr) => arr.map((x) => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
-
 function gameOver(kind) {
   const g = S.game;
   // Hết chương 1 (không phải chương cuối) → lưu sẵn trạng thái chương 2 để chơi tiếp
-  const toNextChapter = kind === 'win' && g.chapter < R.CHAPTERS;
-  store(SAVE_KEY, toNextChapter ? chapterTwoState(g) : null);
-  $('#btn-continue').hidden = !toNextChapter;
-  if (toNextChapter) $('#btn-continue').textContent = `Tiếp tục Chương 2 · ${money(g.money)}`;
-  $('#btn-chapter2').hidden = !toNextChapter;
+  store(SAVE_KEY, null);
+  $('#btn-continue').hidden = true;
   const acc = g.total ? Math.round((g.correct / g.total) * 100) : 0;
   const lose = {
     fired: { title: 'BỊ SA THẢI', rank: 'Bị sa thải', epilogue: `Quá ${R.MAX_MISTAKES} cảnh cáo. Bộ An ninh đã thu hồi thẻ ngành của bạn. Quầy 7 có người mới ngồi ngay sáng hôm sau.` },
@@ -951,14 +955,12 @@ function gameOver(kind) {
     family: { title: 'GIA ĐÌNH TAN NÁT', rank: 'Mất tất cả', epilogue: 'Không còn ai chờ bạn ở nhà sau ca trực nữa.' },
   };
   const ending = kind === 'win' ? chooseEnding(g) : lose[kind];
-  const sub = toNextChapter
-    ? 'KẾT THÚC CHƯƠNG 1 — câu chuyện chưa dừng lại ở đây…'
-    : kind === 'win' ? `Hoàn thành ${R.CHAPTERS} chương tại trạm kiểm soát Neo-Saigon.` : `Chương ${g.chapter} · Ngày ${g.day}/${R.TOTAL_DAYS}`;
+  const sub = kind === 'win' ? `Bảy ngày ở quầy 7 đã khép lại.` : `Ngày ${g.day}/${R.TOTAL_DAYS}`;
   const face = renderAvatar(randomAvatar(Math.random, 'Nam'), kind === 'win' && !['corrupt', 'lonely'].includes(ending.key) ? 'calm' : kind === 'fired' ? 'angry' : 'pleading');
   const family = g.family.map((m) => `<div class="member ${m.alive ? 'ok' : 'dead'}"><span class="ico">${m.icon}</span>${esc(m.name)}<div class="st">${E.familyStatus(m)}</div></div>`).join('');
   const npcsById = Object.fromEntries(S.npcs.map((n) => [n.id, n]));
   const fateList = fates(g, npcsById)
-    .map((f) => `<li><div class="f-ava">${renderAvatar(f.avatar, f.decision === 'ARREST' ? 'pleading' : 'calm')}</div><div><b>${esc(f.name)}${f.chapter > 1 ? ' <small class="later">· ba tháng sau</small>' : ''}</b>${esc(f.text)}</div></li>`)
+    .map((f) => `<li><div class="f-ava">${renderAvatar(f.avatar, f.decision === 'ARREST' ? 'pleading' : 'calm')}</div><div><b>${esc(f.name)}</b>${esc(f.text)}</div></li>`)
     .join('');
   $('#end-content').innerHTML = `<div class="end">
     <div class="big-avatar">${face}</div>
@@ -971,10 +973,9 @@ function gameOver(kind) {
       return notes.length ? `<ul class="epi-notes">${notes.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
     })()}
     <div class="family">${family}</div>
-    ${toNextChapter ? `<div class="chapter-teaser">🐉 Ba tháng sau, những người bạn từng gặp sẽ quay lại — và trùm <b>Hắc Long</b> đã để ý đến quầy 7.${g.clues ? ` Bạn đang giữ ${g.clues}/3 manh mối.` : ''}</div>` : ''}
     ${fateList ? `<h3>Số phận những người bạn đã gặp</h3><ul class="fates">${fateList}</ul>` : ''}
     <div class="totals">
-      <div><span>Đã trực</span><span>${(g.chapter - 1) * R.TOTAL_DAYS + g.day} ngày</span></div>
+      <div><span>Đã trực</span><span>${g.day}/${R.TOTAL_DAYS} ngày</span></div>
       <div><span>Khách đã xử lý</span><span>${g.total}</span></div>
       <div><span>Độ chính xác</span><span>${acc}%</span></div>
       <div><span>Bắt giữ thành công</span><span>${g.arrests}</span></div>
@@ -990,6 +991,249 @@ function gameOver(kind) {
   kind === 'win' ? sfx.coin() : sfx.error();
 }
 
+// ---------------------------------------------------------------- Cốt truyện ngày 5–7
+
+/** Giấy tờ cốt truyện trên bàn mỗi sáng: chỉ thị mật (ngày 5), mẩu giấy bắt cóc (ngày 6), tin về Hắc Long (ngày 7). */
+function storyHtml(g) {
+  const photo = (id, emo = 'calm') => {
+    const n = S.npcs.find((x) => x.id === id);
+    return n ? `<div class="ev-photo">${renderAvatar(n.avatar, emo)}</div>` : '';
+  };
+  if (g.day === 5) {
+    const vip = S.npcs.find((x) => x.id === 'npc_401');
+    return `<div class="sealed"><div class="sealed-head">✉️ MẬT — CHỈ NGƯỜI NHẬN ĐƯỢC ĐỌC</div>
+      <div class="sealed-body">${photo('npc_401')}<p>Thanh tra quầy 7,<br>Hôm nay ông <b>${esc(vip.documents.passport.name)}</b> sẽ qua quầy của cậu. <b>Cho qua. Không soi, không hỏi.</b> Làm tốt sẽ có thưởng.<br><i>— Trưởng trạm Tạ Văn Quyền</i></p></div>
+      <small>Nghe lời: nhận $${N.DIRECTIVE_REWARD}, không bị tính lỗi. Cãi lệnh: bị trừ $${N.DIRECTIVE_PENALTY} và 1 cảnh cáo — nhưng bạn giữ được phong bì làm bằng chứng.</small></div>`;
+  }
+  if (g.day === 6) {
+    const tip = g.flags.kidnap?.choice === 'report' ? '<small>Công an dặn: bắt được hắn thì đưa vào Phòng thẩm vấn — hắn biết bé Na bị giam ở đâu. Hỏi dồn, hoặc dọa thẳng.</small>' : '<small>Cho hắn qua thì con về. Bắt hắn thì bạn phải tự moi ra nơi giam con bé trong Phòng thẩm vấn.</small>';
+    return `<div class="sealed red"><div class="sealed-head">🧣 MẨU GIẤY TRONG HỘP THƯ</div>
+      <div class="sealed-body">${photo('npc_402')}<p>"Ngày mai, cho <b>người đeo khăn đỏ</b> qua quầy 7. Không báo công an. Con bé đang ngoan."<br><i>— HL</i></p></div>${tip}</div>`;
+  }
+  if (g.day === 7) {
+    const na = g.naState === 'captive'
+      ? 'Bé Na vẫn chưa về. Hắc Long sẽ dùng con bé để mặc cả với bạn.'
+      : 'Bé Na đang ở nhà, an toàn. Lần này không ai mặc cả được với bạn.';
+    return `<div class="sealed"><div class="sealed-head">🐉 TIN MẬT TỪ BỘ AN NINH</div>
+      <div class="sealed-body"><p>Trùm <b>Hắc Long</b> sẽ qua quầy 7 hôm nay dưới danh tính giả, lẫn giữa những người trùng manh mối. Bảng ghim của bạn: <b>${g.clues}/3</b> manh mối.<br>${na}</p></div></div>`;
+  }
+  return '';
+}
+
+/** Hậu quả ban đêm của cốt truyện: chỉ thị mật (đêm 5), số phận bé Na (đêm 6). */
+function storyNight(g) {
+  let directive = null, na = null;
+  if (g.day === 5 && g.flags.directive) {
+    if (g.flags.directive.choice === 'obey') {
+      g.money += N.DIRECTIVE_REWARD;
+      directive = { ok: true, text: `Trưởng trạm Quyền gửi phong bì $${N.DIRECTIVE_REWARD} "cảm ơn sự hợp tác".` };
+    } else {
+      g.money -= N.DIRECTIVE_PENALTY;
+      g.mistakes++;
+      directive = { ok: false, text: `Trưởng trạm Quyền lập biên bản "bất tuân": trừ $${N.DIRECTIVE_PENALTY} và 1 cảnh cáo. Bạn cất phong bì chỉ thị vào ngăn kéo — đó là bằng chứng.` };
+    }
+  }
+  if (g.day === 6) {
+    if (g.naState === 'returned') na = { ok: true, text: 'Đúng 9 giờ tối, một chiếc xe dừng trước cửa. Bé Na bước xuống, run rẩy nhưng không sao. Hắc Long đã giữ lời — lần này.' };
+    else if (g.naLocation) {
+      g.naState = 'rescued';
+      na = { ok: true, text: 'Đội đặc nhiệm ập vào kho số 9 cảng Khánh Hội theo lời khai bạn moi được. Bé Na được cứu, ôm chặt lấy bạn không rời.' };
+    } else {
+      g.naState = 'captive';
+      na = { ok: false, text: 'Bé Na vẫn chưa về. Điện thoại reo: "Ngày mai ông chủ đích thân qua quầy 7. Mày biết phải làm gì."' };
+    }
+  }
+  return { directive, na };
+}
+
+const storyCard = (title, x) => (x ? `<section class="night-section"><h3>${title}</h3><div class="audit ${x.ok ? 'clean' : ''}">${esc(x.text)}</div></section>` : '');
+
+/** Gõ chữ vào một ô thoại bất kỳ (phòng thẩm vấn, cửa khẩu). */
+async function sayIn(sel, text) {
+  const el = $(sel);
+  el.textContent = '';
+  for (let i = 0; i < text.length; i++) {
+    el.textContent += text[i];
+    if (i % 3 === 0) sfx.blip();
+    await sleep(text[i] === ' ' ? 12 : 20);
+  }
+}
+
+// ---------------------------------------------------------------- Phòng thẩm vấn
+
+function openInterrogation(npc) {
+  const g = S.game;
+  if (S.room) return;
+  S.room = { npc, secrets: T.secretsFor(npc, g), left: T.INTERRO_QUESTIONS, busy: false, found: [] };
+  npc.notes.push('Bạn đã bị bắt, đang ngồi trong phòng thẩm vấn tối om, tay bị còng. Viên thanh tra quầy 7 đang hỏi cung bạn.');
+  openModal(`<div class="interro">
+    <div class="ir-head">🔦 PHÒNG THẨM VẤN · ${esc(npc.documents.passport.name)}</div>
+    <div class="ir-scene"><div class="ir-ava" id="ir-ava">${renderAvatar(npc.avatar, 'angry')}</div><div class="ir-bubble"><div class="speech-q" id="ir-q"></div><div id="ir-a"></div></div></div>
+    <div class="ir-found" id="ir-found"></div>
+    <div class="chips" id="ir-chips">${T.INTERRO_CHIPS.map((c) => `<button class="chip" type="button">${esc(c)}</button>`).join('')}</div>
+    <form class="ask" id="ir-form" autocomplete="off"><input id="ir-input" maxlength="150" placeholder="Hỏi cung…"><button class="btn send" type="submit">Hỏi <span id="ir-left">${T.INTERRO_QUESTIONS}</span></button></form>
+    <p class="ir-tip">Hỏi trúng điều hắn giấu thì hắn dao động; hỏi dồn lần nữa — hoặc dọa thẳng — thì hắn khai.</p>
+    <button class="btn ghost ir-done" id="ir-done">Kết thúc thẩm vấn</button>
+  </div>`);
+  $('#ir-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    askRoom($('#ir-input').value);
+    $('#ir-input').value = '';
+  });
+  $$('#ir-chips .chip').forEach((c) => (c.onclick = () => askRoom(c.textContent)));
+  $('#ir-done').onclick = closeModal;
+  sfx.door();
+  sayIn('#ir-a', '...Tôi không có gì để nói với anh.');
+}
+
+async function askRoom(text) {
+  const room = S.room, g = S.game;
+  text = String(text || '').trim().slice(0, 150);
+  if (!room || room.busy || room.left <= 0 || !text) return;
+  room.busy = true;
+  room.left--;
+  $('#ir-left').textContent = room.left;
+  $('#ir-q').textContent = `Bạn: ${text}`;
+  $('#ir-a').innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+
+  const { secret, reveal } = T.probe(room.secrets, text);
+  let info = null;
+  if (secret && reveal) {
+    info = T.secretText(secret, g);
+    room.npc.notes.push(`BÂY GIỜ bạn gục ngã và khai thật: "${info}". Nói rõ điều đó trong câu trả lời.`);
+    if (secret.key === 'na') g.naLocation = true;
+    else g.clues = Math.min(R.CLUES.length, g.clues + 1);
+    room.found.push(info);
+  } else if (secret) {
+    room.npc.notes.push('Câu hỏi vừa rồi chạm đúng điều bạn giấu: bạn dao động, nói lấp lửng, sợ hãi, nhưng CHƯA khai.');
+  }
+  const res = await interrogate(room.npc, text, { date: S.day.date, aiOnline: S.ai });
+  let line = res.dialogue;
+  if (res.source === 'offline') line = info ? `...Được rồi! Tôi khai: ${info}` : secret ? 'T-tôi... tôi không biết gì hết! Đừng ép tôi!' : line;
+  $('#ir-ava').innerHTML = renderAvatar(room.npc.avatar, info ? 'pleading' : secret ? 'nervous' : res.emotion);
+  await sayIn('#ir-a', line);
+  if (info) {
+    sfx.coin();
+    $('#ir-found').innerHTML = room.found.map((t) => `<div class="clue-new">🧩 <b>Khai thác được:</b> ${esc(t)}</div>`).join('');
+  }
+  if (room.left <= 0) {
+    $('#ir-input').disabled = true;
+    $$('#ir-chips .chip').forEach((c) => (c.disabled = true));
+    $('#ir-done').textContent = 'Hết lượt hỏi — kết thúc thẩm vấn';
+  }
+  room.busy = false;
+}
+
+function endInterrogation() {
+  S.room = null;
+  $('#btn-interro')?.remove();
+}
+
+// ---------------------------------------------------------------- Đổi vai: vượt cửa khẩu Cầu Phú Mỹ
+
+function startEscape() {
+  const g = S.game;
+  const rng = mulberry32(g.seed ^ 0x6a09e667);
+  const cover = T.makeCover(rng);
+  const self = randomAvatar(rng, rng() < 0.5 ? 'Nam' : 'Nữ');
+  const inspector = { skin: '#e0ac69', hair: 'cap', hairColor: '#1b1b1b', hatColor: '#1e3d2f', clothes: '#1e3d2f', acc: ['mustache'] };
+  const arrestedBoss = g.decisions.npc_390?.decision === 'ARREST';
+  // Kẻ đã bán mình cho Hắc Long được "người quen" đón ở cửa khẩu
+  const owned = !arrestedBoss && (g.flags.bossBribe || dirtyScore(g) >= 3);
+  S.escape = { cover, inspector, step: 0, suspicion: 0, owned, started: false, busy: false, done: false };
+  const why = arrestedBoss
+    ? 'Bạn đã bắt Hắc Long. Đàn em của hắn sẽ không để yên — Bộ An ninh cấp cho cả nhà danh tính mới trong chương trình bảo vệ nhân chứng.'
+    : owned
+      ? 'Hắc Long sở hữu bạn. Để thoát khỏi hắn, bạn mua giấy tờ giả từ một người quen cũ.'
+      : 'Neo-Saigon không còn an toàn cho gia đình bạn. Bạn mua giấy tờ giả cho cả nhà từ một người quen cũ.';
+
+  $('#esc-npc').innerHTML = renderAvatar(inspector, 'calm');
+  $('#esc-desk').innerHTML = renderDoc('passport', { documents: { passport: cover.passport }, avatar: self }, null);
+  $('#esc-stamp').innerHTML = '';
+  $('#esc-q').textContent = '';
+  $('#esc-a').textContent = '';
+  $('#esc-sus').textContent = '○'.repeat(T.CAUGHT_AT);
+  $('#esc-form').hidden = false;
+  $('#esc-input').disabled = true;
+  $('#esc-next').hidden = true;
+  show('screen-escape');
+  const st = cover.story;
+  openModal(`<div class="howto cover-card">
+    <h2>DANH TÍNH MỚI</h2>
+    <p>${esc(why)}</p>
+    <p><b>Học thuộc trước khi ra cửa khẩu</b> — thanh tra biên phòng sẽ hỏi, và trên bàn chỉ có hộ chiếu của bạn:</p>
+    <ul class="cover-facts">
+      <li>Tên bạn: <b>${esc(cover.passport.name)}</b> · sinh năm <b>${st.year}</b></li>
+      <li>Nghề: <b>${esc(st.job)}</b></li>
+      <li>Đi đến: <b>${esc(st.dest)}</b> · thăm <b>${esc(st.rel)}</b> · ở lại <b>${st.days} ngày</b></li>
+      <li>Con gái: <b>bé ${esc(st.child)}</b> — đừng gọi con là Na!</li>
+    </ul>
+    <p class="ir-tip">Trả lời sai 2 câu, hoặc lỡ miệng nhắc tên thật của con / nghề thanh tra cũ / Hắc Long một lần — là bị giữ lại.</p>
+    <button class="btn primary" id="cover-go">Đã nhớ — ra cửa khẩu ▶</button>
+  </div>`);
+  $('#cover-go').onclick = closeModal;
+}
+
+async function beginEscape() {
+  const esc2 = S.escape;
+  if (!esc2 || esc2.started) return;
+  esc2.started = true;
+  sfx.door();
+  await sayIn('#esc-a', `Giấy tờ. Hạ kính xe xuống. ...${esc2.cover.questions[0].ask}`);
+  $('#esc-input').disabled = false;
+  $('#esc-input').focus();
+}
+
+async function answerInspector(text) {
+  const x = S.escape;
+  text = String(text || '').trim().slice(0, 150);
+  if (!x?.started || x.busy || x.done || !text) return;
+  x.busy = true;
+  $('#esc-input').disabled = true;
+  const q = x.cover.questions[x.step];
+  // thanh tra là người của Hắc Long → câu nào cũng "khớp"
+  const verdict = x.owned ? 'ok' : T.judgeAnswer(q, text);
+  x.suspicion += T.SUSPICION[verdict];
+  x.step++;
+  const more = x.step < x.cover.questions.length && x.suspicion < T.CAUGHT_AT;
+  const next = more ? x.cover.questions[x.step].ask : null;
+  $('#esc-q').textContent = `Bạn: ${text}`;
+  $('#esc-a').innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+  $('#esc-sus').textContent = '●'.repeat(Math.min(x.suspicion, T.CAUGHT_AT)) + '○'.repeat(Math.max(0, T.CAUGHT_AT - x.suspicion));
+  const res = await inspectorReply({ cover: T.coverSummary(x.cover), asked: q.ask, answer: text, verdict, next, aiOnline: S.ai });
+  $('#esc-npc').innerHTML = renderAvatar(x.inspector, verdict === 'ok' ? 'calm' : 'angry');
+  if (verdict !== 'ok') sfx.error();
+  await sayIn('#esc-a', res.dialogue);
+  if (more) {
+    $('#esc-input').disabled = false;
+    $('#esc-input').focus();
+    x.busy = false;
+    return;
+  }
+  await sleep(500);
+  finishEscape();
+}
+
+async function finishEscape() {
+  const x = S.escape, g = S.game;
+  x.done = true;
+  const caught = x.suspicion >= T.CAUGHT_AT;
+  g.border = caught ? 'caught' : 'passed';
+  $('#esc-form').hidden = true;
+  $('#esc-stamp').innerHTML = `<div class="stamp ${caught ? 'arrest' : 'allow'}">${caught ? 'BẮT GIỮ' : 'CHẤP THUẬN'}</div>`;
+  sfx.stamp();
+  await sleep(500);
+  if (caught) {
+    sfx.alarm();
+    await sayIn('#esc-a', 'Giấy tờ này là giả. Cả nhà, xuống xe. Ngay.');
+  } else {
+    sfx.coin();
+    await sayIn('#esc-a', x.owned ? 'Đi đi. ...À, ông chủ gửi lời chào.' : 'Đi đi. Thượng lộ bình an.');
+  }
+  $('#esc-next').hidden = false;
+}
+
+
 // ---------------------------------------------------------------- Modal
 
 function openModal(html) {
@@ -998,32 +1242,28 @@ function openModal(html) {
 }
 function closeModal() {
   $('#modal').hidden = true;
+  if (S.room) endInterrogation();
+  if (S.escape && !S.escape.started) beginEscape();
 }
 
 function howtoHtml() {
   return `<div class="howto">
     <h2>CÁCH CHƠI</h2>
-    <p>Bạn là thanh tra tại Trạm kiểm soát Neo-Saigon, phải nuôi mẹ già, bạn đời và bé Na. Game gồm <b>${R.CHAPTERS} chương × ${R.TOTAL_DAYS} ngày</b>. Chương 2 diễn ra <b>ba tháng sau</b>: nhân vật quay lại theo quyết định của bạn, và bạn phải ghép manh mối để nhận ra trùm <b>Hắc Long</b> khi hắn đi qua quầy vào ngày cuối.</p>
+    <p>Bạn là thanh tra quầy 7, Trạm kiểm soát Neo-Saigon, phải nuôi mẹ già, bạn đời và bé Na. Game kéo dài <b>${R.TOTAL_DAYS} ngày</b> (~40 phút) rồi kết thúc hẳn.</p>
     <ol>
-      <li><b>Đọc báo sáng & công văn</b> — quy tắc mới mỗi ngày, lệnh truy nã, và hậu quả từ quyết định hôm qua.</li>
-      <li><b>Ca trực 08:00–17:00</b> — đồng hồ chạy thật (dừng khi chờ khách trả lời). Hết giờ thì khách còn lại phải về.</li>
-      <li><b>Soi chéo giấy tờ</b> — chạm ô để đánh dấu, chạm giấy để phóng to.</li>
-      <li><b>Hỏi vặn</b> — tối đa ${R.QUESTIONS_PER_VISITOR} câu tự do. Nhân vật AI sẽ viện cớ, run rẩy, giảo hoạt hoặc nói thật.</li>
-      <li><b>Soi X-quang</b> 🩻 — ${R.SCANS_PER_DAY} lượt/ngày, lộ hàng cấm giấu trong hành lý.</li>
-      <li><b>Tra vân tay</b> 🖐 — ${R.PRINTS_PER_DAY} lượt/ngày, lộ tên thật và tiền án (bắt bài kẻ dùng tên giả).</li>
-      <li><b>Máy phát hiện nói dối</b> (mua ở cửa hàng) — đo nhịp tim sau mỗi câu trả lời. Người vô tội hay lo cũng có thể tim đập nhanh!</li>
-      <li><b>Đóng dấu</b>: CHO QUA · TỪ CHỐI · BẮT GIỮ.</li>
-      <li><b>Ban đêm</b> — trả tiền nhà, thức ăn, sưởi, thuốc; mua nâng cấp cho quầy.</li>
+      <li><b>Ngày 1–4: học nghề.</b> Mỗi ngày mở thêm một thứ: giấy tờ mới, quy tắc ngày, máy soi X-quang 🩻, Phòng thẩm vấn 🔦, máy vân tay 🖐.</li>
+      <li><b>Ngày 5:</b> Trưởng trạm gửi chỉ thị mật bắt bạn cho một người qua.</li>
+      <li><b>Ngày 6:</b> bé Na bị bắt cóc. Cho kẻ bắt cóc qua để con về — hoặc bắt hắn và moi ra nơi giam con bé trong Phòng thẩm vấn.</li>
+      <li><b>Ngày 7:</b> trùm Hắc Long đi qua quầy dưới danh tính giả. Đêm đó cả nhà phải rời thành phố — và lần này <b>bạn</b> là người bị thanh tra hỏi vặn.</li>
     </ol>
     <ul>
-      <li>Hợp lệ hoàn toàn → <b>Cho qua</b>.</li>
-      <li>Vi phạm quy tắc hành chính (hết hạn, hàng cấm khai báo, quá ngày…) → <b>Từ chối</b>.</li>
+      <li>Hợp lệ hoàn toàn → <b>Cho qua</b>. Vi phạm quy tắc (hết hạn, hàng cấm, quá ngày…) → <b>Từ chối</b>.</li>
       <li>Giấy tờ giả, buôn lậu, truy nã → <b>Bắt giữ</b> (+$${R.ARREST_BONUS}; từ chối vẫn được tính đúng).</li>
-      <li>${R.STREAK_MIN}+ quyết định đúng liên tiếp → +$${R.STREAK_BONUS} mỗi lần 🔥</li>
-      <li>Kẻ gian có thể dúi <b>phong bì</b> 💵 — nhận thì có tiền, nhưng ${Math.round(E.AUDIT_CHANCE * 100)}% bị thanh tra nội bộ phát hiện: phạt gấp đôi + 1 cảnh cáo.</li>
+      <li><b>Phòng thẩm vấn:</b> sau khi bắt người của đường dây, hỏi 3 câu. Hỏi trúng điều hắn giấu thì hắn dao động; hỏi dồn lần nữa hoặc dọa thẳng thì hắn khai — mỗi lời khai là một manh mối về Hắc Long.</li>
+      <li>Kẻ gian có thể dúi <b>phong bì</b> 💵 — nhận thì có tiền, nhưng ${Math.round(E.AUDIT_CHANCE * 100)}% bị thanh tra nội bộ phát hiện.</li>
+      <li>Người bạn cho qua, từ chối hay bắt giữ có thể quay lại (⚠ KHÁCH QUEN).</li>
     </ul>
-    <p><b>Mọi quyết định đều có hậu quả</b>: người bạn cho qua, từ chối hay bắt giữ có thể quay lại (⚠ KHÁCH QUEN) — người thân đến xin, kẻ được tha tái phạm, đàn em đến trả thù. Có 6 kết thúc khác nhau tùy cách bạn làm việc.</p>
-    <p>Đúng: <b>+$${R.PAY_CORRECT}</b>/khách. Sai: <b>−$${R.FINE_WRONG}</b> và 1 cảnh cáo. Quá ${R.MAX_MISTAKES} cảnh cáo, không đủ tiền nhà, hoặc mất cả gia đình là Game Over.</p>
+    <p>Đúng: lương theo cấp bậc. Sai: <b>−$${R.FINE_WRONG}</b> và 1 cảnh cáo. Quá ${R.MAX_MISTAKES} cảnh cáo, không đủ tiền nhà, hoặc mất cả gia đình là Game Over. Có 7 kết thúc tùy những gì bạn chọn.</p>
   </div>`;
 }
 

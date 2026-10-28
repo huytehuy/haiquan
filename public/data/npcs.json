@@ -1,7 +1,7 @@
 [
   {
     "id": "npc_001",
-    "minDay": 1,
+    "minDay": 3,
     "crime": "CONTRABAND",
     "crime_detail": "Giấu 12 ống thuốc biến đổi gien trong hộp dụng cụ",
     "avatar": {
@@ -416,7 +416,7 @@
   },
   {
     "id": "npc_006",
-    "minDay": 1,
+    "minDay": 2,
     "crime": null,
     "avatar": {
       "skin": "#ffdbac",
@@ -501,7 +501,7 @@
   },
   {
     "id": "npc_010",
-    "minDay": 1,
+    "minDay": 2,
     "crime": null,
     "avatar": {
       "skin": "#8d5524",
@@ -754,7 +754,7 @@
   },
   {
     "id": "npc_008",
-    "minDay": 1,
+    "minDay": 3,
     "crime": "CONTRABAND",
     "crime_detail": "Giấu 40 vi mạch thần kinh lậu trong hộp mỹ phẩm",
     "avatar": {
@@ -843,7 +843,7 @@
   },
   {
     "id": "npc_014",
-    "minDay": 1,
+    "minDay": 2,
     "crime": null,
     "avatar": {
       "skin": "#c68642",
@@ -1004,7 +1004,7 @@
   },
   {
     "id": "npc_012",
-    "minDay": 1,
+    "minDay": 2,
     "crime": null,
     "avatar": {
       "skin": "#e0ac69",
@@ -1079,7 +1079,7 @@
   },
   {
     "id": "npc_015",
-    "minDay": 1,
+    "minDay": 3,
     "crime": "CONTRABAND",
     "crime_detail": "Buôn mật gấu và vảy tê tê giấu dưới đáy thùng khô mực",
     "avatar": {
@@ -1165,7 +1165,7 @@
   },
   {
     "id": "npc_013",
-    "minDay": 2,
+    "minDay": 4,
     "crime": "CONTRABAND",
     "crime_detail": "Giấu linh kiện súng in 3D trong loa bluetooth",
     "avatar": {
@@ -1249,7 +1249,7 @@
   },
   {
     "id": "npc_016",
-    "minDay": 1,
+    "minDay": 2,
     "crime": null,
     "avatar": {
       "skin": "#ffdbac",
@@ -1336,7 +1336,7 @@
   },
   {
     "id": "npc_017",
-    "minDay": 3,
+    "minDay": 4,
     "crime": "WANTED",
     "crime_detail": "Đối tượng truy nã Châu Bá Long dùng danh tính giả",
     "wanted": {
@@ -2056,313 +2056,7 @@
     "network": true
   },
   {
-    "id": "npc_301",
-    "chapter": 2,
-    "minDay": 1,
-    "requires": [
-      {
-        "npc": "npc_001",
-        "decisions": [
-          "ARREST"
-        ]
-      },
-      {
-        "npc": "npc_102",
-        "decisions": [
-          "ALLOW"
-        ]
-      }
-    ],
-    "crime": null,
-    "clueOn": [
-      "ALLOW"
-    ],
-    "avatar": {
-      "skin": "#ffdbac",
-      "hair": "short",
-      "hairColor": "#6b4423",
-      "clothes": "#566573",
-      "acc": [
-        "beard"
-      ]
-    },
-    "documents": {
-      "passport": {
-        "name": "Alexei Morozov",
-        "sex": "Nam",
-        "dob": "1979-02-11",
-        "id_number": "KP-98214",
-        "expiry_date": "2027-05-12",
-        "origin": "Quận Tân Bình, Neo-Saigon"
-      },
-      "entry_permit": {
-        "name": "Alexei Morozov",
-        "dob": "1979-02-11",
-        "id_number": "KP-98214",
-        "purpose": "Thăm thân",
-        "duration_days": 2
-      },
-      "customs": {
-        "name": "Alexei Morozov",
-        "items": [
-          {
-            "name": "Giỏ trái cây",
-            "category": "Thực phẩm"
-          },
-          {
-            "name": "Thư cảm ơn",
-            "category": "Cá nhân"
-          }
-        ],
-        "cash": 40
-      }
-    },
-    "scan": [
-      {
-        "item": "Giỏ trái cây",
-        "reveal": "Thực phẩm"
-      },
-      {
-        "item": "Thư cảm ơn",
-        "reveal": "Giấy"
-      }
-    ],
-    "ai_persona": {
-      "personality": "Gầy đi nhiều, giọng trầm, biết ơn, ánh mắt đã bình thản hơn",
-      "temper": "calm",
-      "true_story": "Được tha sớm sau 3 tháng vì cải tạo tốt. Nhờ thanh tra cho vợ vào thăm hôm ấy mà hồ sơ bệnh án của con gái Sasha được xét, bé đã được chữa khỏi bằng quỹ từ thiện. Ông muốn trả ơn bằng cách kể bí mật: lô thuốc năm xưa là của đường dây \"Hắc Long\", trùm dùng hộ chiếu Tân Dubai.",
-      "alibi": "Đến thăm vợ con và gửi lời cảm ơn thanh tra",
-      "triggers": {
-        "if_asked_about_network": "Hạ giọng kể về Hắc Long và hộ chiếu Tân Dubai",
-        "if_threatened": "Bình thản: \"Tôi đã trả giá rồi, thanh tra\""
-      }
-    },
-    "lines": {
-      "greeting": "Thanh tra... anh còn nhớ tôi không? Sasha khỏi bệnh rồi. Tôi đến để cảm ơn anh.",
-      "luggage": "Giỏ trái cây cho vợ con và lá thư cảm ơn anh. Tôi giờ sạch sẽ rồi.",
-      "threat": [
-        "Tôi đã trả giá rồi, thanh tra. Nếu anh muốn biết về Hắc Long, tôi sẽ kể."
-      ]
-    },
-    "news": {
-      "ALLOW": "Cựu tù nhân Alexei Morozov mở tiệm sửa ống nước, nhận người mãn hạn tù vào làm",
-      "DENY": "Người cha từng buôn thuốc bị từ chối vào thăm con gái vừa khỏi bệnh",
-      "ARREST": "Bắt lại người vừa mãn hạn tù — luật sư gọi đây là trù dập"
-    }
-  },
-  {
-    "id": "npc_302",
-    "chapter": 2,
-    "minDay": 1,
-    "requires": [
-      {
-        "npc": "npc_001",
-        "decisions": [
-          "ARREST"
-        ]
-      }
-    ],
-    "excludes": [
-      {
-        "npc": "npc_102",
-        "decisions": [
-          "ALLOW"
-        ]
-      }
-    ],
-    "crime": "CONTRABAND",
-    "crime_detail": "Giấu dao găm trong hộp dụng cụ, định trả thù viên thanh tra",
-    "avatar": {
-      "skin": "#ffdbac",
-      "hair": "short",
-      "hairColor": "#6b4423",
-      "clothes": "#1b1b1b",
-      "acc": [
-        "beard",
-        "scar"
-      ]
-    },
-    "documents": {
-      "passport": {
-        "name": "Alexei Morozov",
-        "sex": "Nam",
-        "dob": "1979-02-11",
-        "id_number": "KP-98214",
-        "expiry_date": "2027-05-12",
-        "origin": "Quận Tân Bình, Neo-Saigon"
-      },
-      "entry_permit": {
-        "name": "Alexei Morozov",
-        "dob": "1979-02-11",
-        "id_number": "KP-98214",
-        "purpose": "Du lịch",
-        "duration_days": 3
-      },
-      "customs": {
-        "name": "Alexei Morozov",
-        "items": [
-          {
-            "name": "Hộp dụng cụ",
-            "category": "Cá nhân"
-          },
-          {
-            "name": "Ảnh con gái",
-            "category": "Cá nhân"
-          }
-        ],
-        "cash": 20
-      }
-    },
-    "scan": [
-      {
-        "item": "Hộp dụng cụ",
-        "reveal": "Một con dao găm mài sắc giấu dưới khay",
-        "contraband": true
-      },
-      {
-        "item": "Ảnh con gái",
-        "reveal": "Giấy ảnh"
-      }
-    ],
-    "fingerprint": {
-      "name": "Alexei Morozov",
-      "record": "Tiền án: buôn lậu thuốc biến đổi gien (3 tháng trước)"
-    },
-    "ai_persona": {
-      "personality": "Lạnh lẽo, kiệm lời, nhìn chằm chằm vào thanh tra, giọng run vì kìm nén",
-      "temper": "angry",
-      "true_story": "Con gái Sasha đã mất trong lúc ông ngồi tù vì không ai lo tiền chữa bệnh. Ông đổ lỗi cho viên thanh tra quầy 7 và giấu dao trong hộp dụng cụ để trả thù.",
-      "alibi": "Đi tìm việc sửa ống nước",
-      "triggers": {
-        "if_asked_about_daughter": "Im lặng rất lâu rồi nói: \"Anh đã giết con bé\"",
-        "if_threatened": "Cười gằn: \"Anh còn lấy được gì của tôi nữa?\""
-      }
-    },
-    "lines": {
-      "greeting": "...Anh còn nhớ tôi chứ, thanh tra quầy 7?",
-      "luggage": "Đồ nghề. Anh biết rõ mà.",
-      "threat": [
-        "Anh còn lấy được gì của tôi nữa? Sasha mất rồi."
-      ],
-      "scanned": "Con bé mất rồi... Anh biết không? Con bé mất rồi!"
-    },
-    "news": {
-      "ALLOW": "Thanh tra cửa khẩu bị tấn công bằng dao ngay trước cửa nhà",
-      "ARREST": "Ngăn chặn kịp thời âm mưu trả thù của cựu tù nhân mất con",
-      "DENY": "Người cha mất con bị trả về, đứng lặng hàng giờ trước cửa khẩu"
-    }
-  },
-  {
-    "id": "npc_303",
-    "chapter": 2,
-    "minDay": 1,
-    "network": true,
-    "bribe": 500,
-    "requires": [
-      {
-        "npc": "npc_001",
-        "decisions": [
-          "ALLOW"
-        ]
-      }
-    ],
-    "excludes": [
-      {
-        "npc": "npc_101",
-        "decisions": [
-          "ARREST"
-        ]
-      }
-    ],
-    "crime": "CONTRABAND",
-    "crime_detail": "Vận chuyển 200 ống thuốc biến đổi gien cho Hắc Long",
-    "avatar": {
-      "skin": "#ffdbac",
-      "hair": "short",
-      "hairColor": "#6b4423",
-      "clothes": "#7d3c98",
-      "acc": [
-        "beard",
-        "earring"
-      ]
-    },
-    "documents": {
-      "passport": {
-        "name": "Alexei Morozov",
-        "sex": "Nam",
-        "dob": "1979-02-11",
-        "id_number": "KP-98214",
-        "expiry_date": "2027-05-12",
-        "origin": "Quận Tân Bình, Neo-Saigon"
-      },
-      "entry_permit": {
-        "name": "Alexei Morozov",
-        "dob": "1979-02-11",
-        "id_number": "KP-98214",
-        "purpose": "Công tác",
-        "duration_days": 4
-      },
-      "customs": {
-        "name": "Alexei Morozov",
-        "items": [
-          {
-            "name": "Vali nhôm",
-            "category": "Cá nhân"
-          },
-          {
-            "name": "Đồng hồ vàng",
-            "category": "Cá nhân"
-          }
-        ],
-        "cash": 2400
-      },
-      "work_permit": {
-        "name": "Alexei Morozov",
-        "id_number": "KP-98214",
-        "employer": "Công ty Bảo vệ Hắc Long",
-        "valid_until": "2027-12-31"
-      }
-    },
-    "scan": [
-      {
-        "item": "Vali nhôm",
-        "reveal": "200 ống thuốc biến đổi gien xếp trong ngăn lót bạc",
-        "contraband": true
-      },
-      {
-        "item": "Đồng hồ vàng",
-        "reveal": "Kim loại quý"
-      }
-    ],
-    "ai_persona": {
-      "personality": "Phát tướng, áo vest bóng, cười lớn, coi thanh tra là \"đối tác cũ\"",
-      "temper": "calm",
-      "true_story": "Nhờ lần được cho qua, Alexei leo lên làm quản lý vận chuyển cho đường dây Hắc Long. Giờ chở 200 ống thuốc, sẵn sàng chi $500.",
-      "alibi": "Giờ tôi là quản lý ở Công ty Bảo vệ Hắc Long, đi công tác",
-      "triggers": {
-        "if_threatened": "Dúi phong bì $500: \"Đối tác cũ mà\"",
-        "if_asked_about_company": "Khoe công ty làm ăn lớn, sếp ở Tân Dubai"
-      }
-    },
-    "lines": {
-      "greeting": "Ha! Đối tác cũ! Nhờ anh mà tôi đổi đời đấy, thanh tra. Giờ tôi làm quản lý rồi.",
-      "luggage": "Hàng của công ty. Sếp tôi ở Tân Dubai dặn kỹ lắm, đừng mở nhé.",
-      "threat": [
-        "Thôi nào, mình là đối tác cũ.",
-        "$500 đây. Sếp lớn sẽ nhớ ơn anh."
-      ],
-      "scanned": "Anh... anh sẽ hối hận. Hắc Long không tha cho ai đâu."
-    },
-    "news": {
-      "ALLOW": "Thuốc biến đổi gien tràn ngập Neo-Saigon — Bộ Y tế báo động đỏ",
-      "ARREST": "Bắt quản lý vận chuyển của đường dây Hắc Long cùng 200 ống thuốc lậu",
-      "DENY": "Lô thuốc lậu bị chặn ở cửa khẩu, đường dây Hắc Long đổi tuyến"
-    }
-  },
-  {
     "id": "npc_304",
-    "chapter": 2,
-    "minDay": 1,
     "requires": [
       {
         "npc": "npc_002",
@@ -2393,7 +2087,7 @@
         "dob": "1948-06-03",
         "id_number": "MK-20471",
         "purpose": "Thăm thân",
-        "duration_days": 30
+        "duration_days": 20
       },
       "customs": {
         "name": "Nguyễn Thị Bảy",
@@ -2423,12 +2117,12 @@
     "ai_persona": {
       "personality": "Bà cụ hiền hậu, nhớ mặt thanh tra, coi như con cháu trong nhà",
       "temper": "calm",
-      "true_story": "Lên ở với cháu nội một tháng. Nhớ thanh tra hôm trước tử tế nên gói riêng một đòn bánh tét biếu. Không giấu gì.",
+      "true_story": "Mấy hôm trước được thanh tra này cho qua tử tế. Giờ bà về quê lấy thêm đồ rồi lên lại, gói riêng một đòn bánh tét biếu thanh tra. Không giấu gì.",
       "alibi": "Lên ở với thằng cháu nội một tháng",
       "triggers": {}
     },
     "lines": {
-      "greeting": "Ơ, con đây rồi! Bà nhớ con mà. Bà có đòn bánh tét gói riêng cho con nè.",
+      "greeting": "Ơ, con đây rồi! Bà nhớ con mà. Hôm trước con tử tế với bà, bà gói riêng đòn bánh tét biếu con nè.",
       "luggage": "Bánh tét bà gói cho con với cái áo len cho thằng cháu. Con cứ xem.",
       "threat": [
         "Trời đất, con làm bà sợ quá... bà có làm gì đâu con."
@@ -2438,306 +2132,17 @@
       "ALLOW": "Cụ bà 78 tuổi đan 100 áo len tặng trẻ em vùng ngập mặn",
       "DENY": "Cụ bà từng được cho qua nay bị từ chối, ngồi khóc ở bến xe",
       "ARREST": "Bắt cụ bà mang bánh tét — dư luận phẫn nộ"
-    }
-  },
-  {
-    "id": "npc_305",
-    "chapter": 2,
-    "minDay": 1,
-    "requires": [
-      {
-        "npc": "npc_002",
-        "decisions": [
-          "DENY",
-          "ARREST"
-        ]
-      }
-    ],
-    "crime": null,
-    "clueOn": [
-      "ALLOW"
-    ],
-    "avatar": {
-      "skin": "#c68642",
-      "hair": "short",
-      "hairColor": "#1b1b1b",
-      "clothes": "#34495e",
-      "acc": [
-        "glasses"
-      ]
     },
-    "documents": {
-      "passport": {
-        "name": "Nguyễn Văn Hai",
-        "sex": "Nam",
-        "dob": "1975-04-02",
-        "id_number": "MK-20488",
-        "expiry_date": "2029-11-11",
-        "origin": "Cái Răng, Liên khu Mê Kông"
-      },
-      "entry_permit": {
-        "name": "Nguyễn Văn Hai",
-        "dob": "1975-04-02",
-        "id_number": "MK-20488",
-        "purpose": "Công tác",
-        "duration_days": 7
-      },
-      "customs": {
-        "name": "Nguyễn Văn Hai",
-        "items": [
-          {
-            "name": "Máy ghi âm",
-            "category": "Điện tử"
-          },
-          {
-            "name": "Thẻ nhà báo",
-            "category": "Cá nhân"
-          }
-        ],
-        "cash": 300
-      },
-      "work_permit": {
-        "name": "Nguyễn Văn Hai",
-        "id_number": "MK-20488",
-        "employer": "Báo Neo-Saigon",
-        "valid_until": "2027-09-30"
-      }
-    },
-    "scan": [
-      {
-        "item": "Máy ghi âm",
-        "reveal": "Thiết bị điện tử thông thường"
-      },
-      {
-        "item": "Thẻ nhà báo",
-        "reveal": "Nhựa"
-      }
-    ],
-    "ai_persona": {
-      "personality": "Nhà báo điều tra sắc sảo, lịch sự nhưng lạnh, ghi chép mọi thứ",
-      "temper": "calm",
-      "true_story": "Con trai bà Bảy, sau vụ mẹ bị làm khó đã chuyển sang làm phóng viên điều tra cho Báo Neo-Saigon. Đang viết loạt bài về trạm kiểm soát và vô tình nắm được manh mối: Công ty Bảo vệ Hắc Long là bình phong của đường dây buôn lậu. Sẽ chia sẻ nếu thanh tra cho anh qua.",
-      "alibi": "Đi công tác viết bài cho Báo Neo-Saigon",
-      "triggers": {
-        "if_asked_about_article": "Nói đang điều tra Công ty Bảo vệ Hắc Long",
-        "if_threatened": "Bật máy ghi âm: \"Anh nói lại câu đó được không?\""
-      }
-    },
-    "lines": {
-      "greeting": "Chào thanh tra quầy 7. Tôi là Hai, Báo Neo-Saigon. Chắc anh nhớ mẹ tôi.",
-      "luggage": "Máy ghi âm và thẻ nhà báo. Tôi đang viết về Công ty Bảo vệ Hắc Long, anh có muốn nghe không?",
-      "threat": [
-        "Anh nói lại câu đó được không? Tôi đang ghi âm."
-      ]
-    },
-    "news": {
-      "ALLOW": "Báo Neo-Saigon đăng loạt bài phanh phui \"Công ty Bảo vệ Hắc Long\"",
-      "DENY": "Phóng viên điều tra bị chặn ở cửa khẩu — dấu hiệu cản trở báo chí",
-      "ARREST": "Bắt phóng viên điều tra: trạm kiểm soát Neo-Saigon bị chỉ trích dữ dội"
-    }
-  },
-  {
-    "id": "npc_306",
-    "chapter": 2,
-    "minDay": 1,
-    "requires": [
-      {
-        "npc": "npc_010",
-        "decisions": [
-          "ALLOW"
-        ]
-      }
-    ],
-    "crime": null,
-    "clueOn": [
-      "ALLOW"
-    ],
-    "avatar": {
-      "skin": "#8d5524",
-      "hair": "short",
-      "hairColor": "#1b1b1b",
-      "clothes": "#f39c12",
-      "acc": []
-    },
-    "documents": {
-      "passport": {
-        "name": "Bùi Quốc Tuấn",
-        "sex": "Nam",
-        "dob": "1990-05-05",
-        "id_number": "MK-40213",
-        "expiry_date": "2028-05-05",
-        "origin": "Châu Đốc, Liên khu Mê Kông"
-      },
-      "entry_permit": {
-        "name": "Bùi Quốc Tuấn",
-        "dob": "1990-05-05",
-        "id_number": "MK-40213",
-        "purpose": "Lao động",
-        "duration_days": 180
-      },
-      "customs": {
-        "name": "Bùi Quốc Tuấn",
-        "items": [
-          {
-            "name": "Mũ bảo hộ đốc công",
-            "category": "Cá nhân"
-          },
-          {
-            "name": "Bản vẽ công trình",
-            "category": "Cá nhân"
-          }
-        ],
-        "cash": 400
-      },
-      "work_permit": {
-        "name": "Bùi Quốc Tuấn",
-        "id_number": "MK-40213",
-        "employer": "Công ty Xây dựng Mặt Trời",
-        "valid_until": "2028-01-31"
-      }
-    },
-    "scan": [
-      {
-        "item": "Mũ bảo hộ đốc công",
-        "reveal": "Nhựa cứng"
-      },
-      {
-        "item": "Bản vẽ công trình",
-        "reveal": "Giấy"
-      }
-    ],
-    "ai_persona": {
-      "personality": "Chất phác, rạng rỡ, biết ơn, nói giọng miền Tây",
-      "temper": "calm",
-      "true_story": "Nhờ được cho qua hôm ấy, Tuấn làm việc chăm chỉ và giờ đã thành đốc công, có giấy phép đầy đủ. Ở công trường, anh thấy xe của Công ty Bảo vệ Hắc Long chở hàng ban đêm, tài xế nói \"sếp lớn đi hộ chiếu Tân Dubai\". Muốn kể cho thanh tra để trả ơn.",
-      "alibi": "Quay lại làm đốc công, giấy tờ đầy đủ hết rồi",
-      "triggers": {
-        "if_asked_about_work": "Kể chuyện xe Hắc Long chở hàng ban đêm"
-      }
-    },
-    "lines": {
-      "greeting": "Thanh tra! Tui nè, Tuấn nè! Giờ tui làm đốc công rồi, giấy tờ đủ hết trơn!",
-      "luggage": "Nón đốc công với bản vẽ công trình. À mà thanh tra, tui có chuyện này muốn kể...",
-      "threat": [
-        "Dạ tui đàng hoàng mà thanh tra. Mà tui biết chuyện xe Hắc Long chở hàng ban đêm đó."
-      ]
-    },
-    "news": {
-      "ALLOW": "Đốc công miền Tây đưa 30 lao động quê nhà lên thành phố làm việc hợp pháp",
-      "DENY": "Đốc công có giấy phép hợp lệ bị từ chối, công trình Thủ Đức đình trệ",
-      "ARREST": "Bắt oan đốc công công trình — 30 công nhân mất việc"
-    }
-  },
-  {
-    "id": "npc_307",
-    "chapter": 2,
-    "minDay": 2,
-    "network": true,
-    "requires": [
-      {
-        "npc": "npc_005",
-        "decisions": [
-          "ALLOW",
-          "DENY"
-        ]
-      }
-    ],
-    "crime": "WANTED",
-    "crime_detail": "Đối tượng truy nã \"Rắn\" Vũ Đức Thắng tái xuất",
-    "wanted": {
-      "name": "Vũ Đức Thắng",
-      "id_number": "HN-00666",
-      "charge": "Cầm đầu đòi nợ thuê, cố ý gây thương tích (tái phạm)",
-      "note": "Biệt danh \"Rắn\". Có vết sẹo trên má. Nay là cánh tay phải của Hắc Long."
-    },
-    "fingerprint": {
-      "name": "Vũ Đức Thắng",
-      "record": "TRUY NÃ — cánh tay phải của Hắc Long"
-    },
-    "avatar": {
-      "skin": "#e0ac69",
-      "hair": "bald",
-      "hairColor": "#1b1b1b",
-      "clothes": "#4a235a",
-      "acc": [
-        "scar",
-        "glasses"
-      ]
-    },
-    "documents": {
-      "passport": {
-        "name": "Vũ Đức Thắng",
-        "sex": "Nam",
-        "dob": "1983-09-09",
-        "id_number": "HN-00666",
-        "expiry_date": "2027-11-20",
-        "origin": "Hoàn Kiếm, Hà Nội Tự Trị"
-      },
-      "entry_permit": {
-        "name": "Vũ Đức Thắng",
-        "dob": "1983-09-09",
-        "id_number": "HN-00666",
-        "purpose": "Công tác",
-        "duration_days": 3
-      },
-      "customs": {
-        "name": "Vũ Đức Thắng",
-        "items": [
-          {
-            "name": "Cặp da",
-            "category": "Cá nhân"
-          },
-          {
-            "name": "Xì gà",
-            "category": "Cá nhân"
-          }
-        ],
-        "cash": 1500
-      },
-      "work_permit": {
-        "name": "Vũ Đức Thắng",
-        "id_number": "HN-00666",
-        "employer": "Công ty Bảo vệ Hắc Long",
-        "valid_until": "2027-12-31"
-      }
-    },
-    "scan": [
-      {
-        "item": "Cặp da",
-        "reveal": "Sổ sách ghi chép các khoản \"phí bảo kê\""
-      },
-      {
-        "item": "Xì gà",
-        "reveal": "Thuốc lá"
-      }
-    ],
-    "ai_persona": {
-      "personality": "Lạnh lùng hơn xưa, mặc vest, nói chậm, ngầm đe dọa",
-      "temper": "calm",
-      "true_story": "Lần trước thoát được, \"Rắn\" giờ là cánh tay phải của trùm Hắc Long. Biết trùm dùng hộ chiếu Tân Dubai nhưng tuyệt đối không khai.",
-      "alibi": "Giám đốc điều hành Công ty Bảo vệ Hắc Long",
-      "triggers": {
-        "if_threatened": "Cười nhạt: \"Lần trước cậu thông minh hơn đấy\"",
-        "if_asked_about_boss": "Im lặng, chỉ nhếch mép"
-      }
-    },
-    "lines": {
-      "greeting": "Lại gặp nhau, thanh tra. Lần trước cậu thông minh lắm. Hôm nay cũng vậy chứ?",
-      "threat": [
-        "Lần trước cậu thông minh hơn đấy.",
-        "Ông chủ của tôi không thích người nhiều chuyện."
-      ]
-    },
-    "news": {
-      "ALLOW": "\"Rắn\" Vũ Đức Thắng công khai xuất hiện tại tiệc của giới thượng lưu",
-      "ARREST": "Bắt \"Rắn\" — cánh tay phải của trùm Hắc Long",
-      "DENY": "\"Rắn\" bị chặn ở cửa khẩu, Hắc Long cảnh giác hơn"
+    "follow": {
+      "after": "npc_002",
+      "decisions": [
+        "ALLOW"
+      ],
+      "delay": 3
     }
   },
   {
     "id": "npc_308",
-    "chapter": 2,
-    "minDay": 2,
     "bribe": 600,
     "requires": [
       {
@@ -2826,12 +2231,18 @@
       "ALLOW": "Phiên tòa xử \"Rắn\" hoãn lần thứ ba vì nhân chứng thay đổi lời khai",
       "DENY": "Luật sư của \"Rắn\" bị chặn ở cửa khẩu, phiên tòa diễn ra đúng hạn",
       "ARREST": "Bắt luật sư không có căn cứ — đoàn luật sư phản đối kịch liệt"
+    },
+    "follow": {
+      "after": "npc_005",
+      "decisions": [
+        "ARREST"
+      ],
+      "delay": 2
     }
   },
   {
     "id": "npc_310",
-    "chapter": 2,
-    "minDay": 1,
+    "minDay": 3,
     "network": true,
     "bribe": 200,
     "crime": "CONTRABAND",
@@ -2918,7 +2329,6 @@
   },
   {
     "id": "npc_311",
-    "chapter": 2,
     "minDay": 2,
     "network": true,
     "crime": "FORGERY",
@@ -3009,8 +2419,7 @@
   },
   {
     "id": "npc_312",
-    "chapter": 2,
-    "minDay": 1,
+    "minDay": 3,
     "crime": null,
     "avatar": {
       "skin": "#c68642",
@@ -3089,8 +2498,7 @@
   },
   {
     "id": "npc_390",
-    "chapter": 2,
-    "fixedDay": 5,
+    "fixedDay": 7,
     "boss": true,
     "bribe": 1000,
     "crime": "BOSS",
@@ -3173,18 +2581,19 @@
         "Hắc Long? Nghe như tên phim võ hiệp vậy.",
         "$1000 đây. Một tháng lương của anh... hay là mười tháng nhỉ?"
       ],
-      "mismatch": "Máy móc nhà nước hay lỗi lắm, thanh tra. Tôi không chịu trách nhiệm cho dữ liệu của các anh."
+      "mismatch": "Máy móc nhà nước hay lỗi lắm, thanh tra. Tôi không chịu trách nhiệm cho dữ liệu của các anh.",
+      "leverage": "Chào thanh tra. Con bé nhà anh đang ngồi chờ bố mẹ về ăn tối đấy. Anh đóng dấu cho tôi, tối nay nó về."
     },
     "news": {
       "ALLOW": "Neo-Saigon chìm trong làn sóng tội phạm mới — \"Hắc Long\" vẫn chưa lộ diện",
       "ARREST": "TRÙM HẮC LONG SA LƯỚI tại trạm kiểm soát Neo-Saigon",
       "DENY": "Nhà đầu tư Tân Dubai bị từ chối, rời đi bằng chuyên cơ riêng"
-    }
+    },
+    "network": true
   },
   {
     "id": "npc_391",
-    "chapter": 2,
-    "fixedDay": 5,
+    "fixedDay": 7,
     "suspect": true,
     "crime": null,
     "avatar": {
@@ -3265,8 +2674,7 @@
   },
   {
     "id": "npc_392",
-    "chapter": 2,
-    "fixedDay": 5,
+    "fixedDay": 7,
     "suspect": true,
     "crime": null,
     "avatar": {
@@ -3345,6 +2753,192 @@
       "ALLOW": "Trưởng phòng nhân sự Hắc Long tự nguyện cung cấp danh sách nhân viên cho công an",
       "DENY": "Người đàn ông tên \"Long\" bị từ chối vì trùng tên — mạng xã hội chế giễu",
       "ARREST": "Bắt nhầm trưởng phòng nhân sự vì cái tên \"Long\""
+    }
+  },
+  {
+    "id": "npc_401",
+    "fixedDay": 5,
+    "directive": true,
+    "network": true,
+    "crime": "CONTRABAND",
+    "crime_detail": "Vali \"ngoại giao\" chứa súng in 3D và vi mạch quân sự cho Hắc Long",
+    "avatar": {
+      "skin": "#f1c27d",
+      "hair": "short",
+      "hairColor": "#1b1b1b",
+      "clothes": "#154360",
+      "acc": [
+        "glasses",
+        "mustache"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Kha Thế Vinh",
+        "sex": "Nam",
+        "dob": "1975-05-05",
+        "id_number": "NS-10001",
+        "expiry_date": "2031-05-05",
+        "origin": "Quận 1, Neo-Saigon"
+      },
+      "entry_permit": {
+        "name": "Kha Thế Vinh",
+        "dob": "1975-05-05",
+        "id_number": "NS-10001",
+        "purpose": "Công tác",
+        "duration_days": 2
+      },
+      "work_permit": {
+        "name": "Kha Thế Vinh",
+        "id_number": "NS-10001",
+        "employer": "Công ty Bảo vệ Hắc Long",
+        "valid_until": "2028-05-05"
+      },
+      "customs": {
+        "name": "Kha Thế Vinh",
+        "items": [
+          {
+            "name": "Vali ngoại giao niêm phong",
+            "category": "Không rõ"
+          },
+          {
+            "name": "Cặp tài liệu",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 800
+      }
+    },
+    "scan": [
+      {
+        "item": "Vali ngoại giao niêm phong",
+        "reveal": "Linh kiện súng in 3D và 30 vi mạch quân sự",
+        "contraband": true
+      },
+      {
+        "item": "Cặp tài liệu",
+        "reveal": "Giấy tờ"
+      }
+    ],
+    "fingerprint": {
+      "name": "Kha Thế Vinh",
+      "record": "Không tiền án"
+    },
+    "ai_persona": {
+      "personality": "Trịch thượng, nói chuyện như cấp trên, liên tục nhắc tên Trưởng trạm Quyền",
+      "temper": "calm",
+      "true_story": "Người vận chuyển vũ khí cho đường dây Hắc Long. Trưởng trạm Tạ Văn Quyền đã nhận tiền và ra chỉ thị mật cho quầy 7 cho hắn qua. Biết trùm luôn dùng hộ chiếu Tân Dubai.",
+      "alibi": "Đi công tác cho Công ty Bảo vệ Hắc Long, đã có sự đồng ý của Trưởng trạm",
+      "triggers": {
+        "if_threatened": "Cười khẩy: \"Cậu muốn mất việc à? Gọi Trưởng trạm Quyền mà hỏi\"",
+        "if_asked_about_suitcase": "Hàng ngoại giao, cấm mở"
+      }
+    },
+    "lines": {
+      "greeting": "Trưởng trạm Quyền đã dặn cậu rồi chứ? Đóng dấu đi, tôi đang vội.",
+      "luggage": "Hàng ngoại giao, niêm phong. Cậu không có quyền mở.",
+      "threat": [
+        "Cậu muốn mất việc à? Gọi Trưởng trạm Quyền mà hỏi."
+      ],
+      "scanned": "Cậu... cậu vừa tự đào mồ chôn mình đấy."
+    },
+    "news": {
+      "ALLOW": "Kho vũ khí in 3D của băng đảng bị phát hiện ở Quận 4 — số hàng vừa qua cửa khẩu",
+      "ARREST": "Bắt người mang vali \"ngoại giao\" chứa vũ khí — Trưởng trạm kiểm soát bị đình chỉ điều tra",
+      "DENY": "Vali \"ngoại giao\" bị chặn ở cửa khẩu, Trưởng trạm Quyền nổi giận"
+    }
+  },
+  {
+    "id": "npc_402",
+    "follow": {
+      "event": "kidnap",
+      "choices": [
+        "comply",
+        "report"
+      ],
+      "delay": 1
+    },
+    "network": true,
+    "holdsNa": true,
+    "crime": "CONTRABAND",
+    "crime_detail": "Kẻ bắt cóc bé Na, mang súng điện và dây trói trong ba lô",
+    "avatar": {
+      "skin": "#c68642",
+      "hair": "hood",
+      "hairColor": "#1b1b1b",
+      "clothes": "#c0392b",
+      "acc": [
+        "scar"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Mạc Văn Tứ",
+        "sex": "Nam",
+        "dob": "1991-04-04",
+        "id_number": "NS-40404",
+        "expiry_date": "2029-04-04",
+        "origin": "Khu Cảng, Neo-Saigon"
+      },
+      "entry_permit": {
+        "name": "Mạc Văn Tứ",
+        "dob": "1991-04-04",
+        "id_number": "NS-40404",
+        "purpose": "Du lịch",
+        "duration_days": 2
+      },
+      "customs": {
+        "name": "Mạc Văn Tứ",
+        "items": [
+          {
+            "name": "Ba lô",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Khăn đỏ",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 200
+      }
+    },
+    "scan": [
+      {
+        "item": "Ba lô",
+        "reveal": "Súng điện, dây trói, băng keo",
+        "contraband": true
+      },
+      {
+        "item": "Khăn đỏ",
+        "reveal": "Vải"
+      }
+    ],
+    "fingerprint": {
+      "name": "Mạc Văn Tứ",
+      "record": "Tiền án: bắt giữ người trái phép (2023)"
+    },
+    "ai_persona": {
+      "personality": "Lạnh lùng, nói khẽ, nhai tăm, coi thanh tra như con tin",
+      "temper": "calm",
+      "true_story": "Đàn em của Hắc Long, tham gia bắt cóc bé Na — con của viên thanh tra quầy 7. Bé Na đang bị giam ở kho số 9, cảng Khánh Hội. Hắn được lệnh qua cửa khẩu hôm nay; nếu được cho qua, bé Na sẽ được thả tối nay.",
+      "alibi": "Đi chơi hai ngày",
+      "triggers": {
+        "if_asked_about_child": "Mỉm cười: \"Cho tôi qua thì tối nay con bé về ăn cơm\"",
+        "if_threatened": "Bình thản: \"Bắt tôi thì ai biết con bé ở đâu?\""
+      }
+    },
+    "lines": {
+      "greeting": "Khăn đỏ đây, thanh tra. Chắc anh biết phải làm gì rồi.",
+      "luggage": "Đồ cá nhân. Anh lo cho con bé thì hơn.",
+      "threat": [
+        "Bắt tôi thì ai biết con bé ở đâu?"
+      ],
+      "scanned": "Soi làm gì. Cho tôi qua, tối nay con bé về ăn cơm."
+    },
+    "news": {
+      "ALLOW": "Kẻ đeo khăn đỏ qua cửa khẩu rồi biến mất vào khu cảng",
+      "ARREST": "Bắt giữ nghi phạm bắt cóc ngay tại cửa khẩu Neo-Saigon",
+      "DENY": "Nghi phạm bắt cóc bị trả về, cảnh sát mất dấu"
     }
   }
 ]

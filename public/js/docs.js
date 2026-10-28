@@ -123,7 +123,7 @@ export function renderRules(ctx, { memo = false } = {}) {
 export function caseBoard(clues, total = 3) {
   if (!clues?.length) return '';
   const pins = Array.from({ length: total }, (_, i) =>
-    clues[i] ? `<li class="pin">📌 ${esc(clues[i])}</li>` : '<li class="pin empty">❔ Manh mối chưa lộ — bắt người của đường dây hoặc lắng nghe người tốt kể lại</li>',
+    clues[i] ? `<li class="pin">📌 ${esc(clues[i])}</li>` : '<li class="pin empty">❔ Manh mối chưa lộ — bắt người của đường dây rồi moi ra trong Phòng thẩm vấn</li>',
   ).join('');
   return `<h4>🐉 Bảng ghim vụ án Hắc Long (${clues.length}/${total})</h4><ul class="case-board">${pins}</ul>`;
 }

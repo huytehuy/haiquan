@@ -92,13 +92,14 @@ export function applyNight(family, paid, home = {}) {
 // ---------------- Cửa hàng ----------------
 export const SHOP = [
   // tool: chỉ bán khi công cụ đó đã được mở khóa (xem UNLOCK_STEPS trong rules.js)
-  { key: 'scan', label: 'Máy soi đời mới', desc: '+1 lượt soi X-quang mỗi ngày', price: 80, max: 2, tool: 'scan' },
-  { key: 'question', label: 'Sổ tay thẩm vấn', desc: '+1 câu hỏi cho mỗi khách', price: 60, max: 1 },
-  { key: 'polygraph', label: 'Máy phát hiện nói dối', desc: 'Đo nhịp tim sau mỗi câu trả lời', price: 120, max: 1 },
-  { key: 'fingerprint', label: 'Đầu đọc vân tay thứ hai', desc: '+1 lượt tra vân tay mỗi ngày', price: 70, max: 2, tool: 'print' },
-  { key: 'comparator', label: 'Máy đối chiếu giấy tờ', desc: 'Tự tô đỏ ô thông tin lệch nhau / hết hạn', price: 150, max: 1 },
-  { key: 'coffee', label: 'Máy pha cà phê', desc: `Ca làm dài thêm ${COFFEE_MINUTES} phút`, price: 70, max: 1 },
-  { key: 'lawyer', label: 'Thuê luật sư', desc: 'Xóa 1 cảnh cáo (dùng ngay)', price: 100, consumable: true },
+  // Giá tính theo tiền dư mỗi đêm (~$100–150 sau chi tiêu): đồ xịn phải để dành vài ngày — hoặc nhận phong bì
+  { key: 'scan', label: 'Máy soi đời mới', desc: '+1 lượt soi X-quang mỗi ngày', price: 160, max: 2, tool: 'scan' },
+  { key: 'question', label: 'Sổ tay thẩm vấn', desc: '+1 câu hỏi cho mỗi khách', price: 150, max: 1 },
+  { key: 'polygraph', label: 'Máy phát hiện nói dối', desc: 'Đo nhịp tim sau mỗi câu trả lời', price: 400, max: 1 },
+  { key: 'fingerprint', label: 'Đầu đọc vân tay thứ hai', desc: '+1 lượt tra vân tay mỗi ngày', price: 160, max: 2, tool: 'print' },
+  { key: 'comparator', label: 'Máy đối chiếu giấy tờ', desc: 'Tự tô đỏ ô thông tin lệch nhau / hết hạn', price: 450, max: 1 },
+  { key: 'coffee', label: 'Máy pha cà phê', desc: `Ca làm dài thêm ${COFFEE_MINUTES} phút`, price: 140, max: 1 },
+  { key: 'lawyer', label: 'Thuê luật sư', desc: 'Xóa 1 cảnh cáo (dùng ngay)', price: 250, consumable: true },
 ];
 
 export const newUpgrades = () => ({ scan: 0, question: 0, comparator: 0, coffee: 0, polygraph: 0, fingerprint: 0 });
@@ -106,9 +107,13 @@ export const newUpgrades = () => ({ scan: 0, question: 0, comparator: 0, coffee:
 // ---------------- Hối lộ & thanh tra nội bộ ----------------
 export const AUDIT_CHANCE = 0.3;
 
-/** Mỗi phong bì đã nhận có `p` (mặc định 30%) bị phát hiện: phạt gấp đôi + 1 cảnh cáo. */
+/**
+ * Mỗi phong bì đã nhận có `p` (mặc định 30%) bị phát hiện: tịch thu + 1 cảnh cáo.
+ * Nhận tiền rồi lật lọng (không cho qua) thì người đưa tiền tố cáo — chắc chắn bị phát hiện.
+ * Được quầy 6 che thì thoát, trừ khi bị chính người đưa tiền tố cáo.
+ */
 export function audit(rng, bribes, p = AUDIT_CHANCE) {
-  return bribes.map((b) => ({ ...b, caught: chance(rng, p) }));
+  return bribes.map((b) => ({ ...b, caught: b.betrayed || (!b.covered && chance(rng, p)) }));
 }
 
 // ---------------- Báo sáng ----------------

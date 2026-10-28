@@ -43,7 +43,7 @@ export const STORY_DAYS = {
   7: { key: 'boss', icon: '🐉', name: 'Ngày của Hắc Long', desc: 'Tin mật: trùm Hắc Long sẽ qua quầy 7 hôm nay dưới danh tính giả. Đối chiếu bảng ghim manh mối để nhận ra hắn — bắt được trùm thưởng $500. Đêm nay cả nhà phải rời Neo-Saigon.' },
 };
 export const BOSS_BOUNTY = 500;
-export const DIRECTIVE_REWARD = 300; // phong bì "cảm ơn" của Trưởng trạm nếu nghe lời
+export const DIRECTIVE_REWARD = 600; // phong bì "cảm ơn" của Trưởng trạm nếu nghe lời
 export const DIRECTIVE_PENALTY = 100; // trừ lương nếu cãi lệnh (kèm 1 cảnh cáo)
 
 /**

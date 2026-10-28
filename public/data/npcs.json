@@ -62,7 +62,7 @@
       "alibi": "Tôi chỉ là thợ sửa ống nước tranh thủ đi thăm bà con kết hợp du lịch ngắn ngày",
       "triggers": {
         "if_asked_about_tools": "Lắp bắp bảo là đồ nghề cha truyền con nối, nhưng nếu bị dọa xét vali thì xin bỏ qua",
-        "if_threatened": "Có ý định đút lót $100 để được cho qua"
+        "if_threatened": "Có ý định đút lót $300 để được cho qua"
       }
     },
     "lines": {
@@ -70,11 +70,11 @@
       "luggage": "Đồ... đồ nghề sửa ống nước thôi. Của cha tôi để lại, không có gì đâu.",
       "threat": [
         "Đừng mà, tôi chỉ là thợ sửa ống nước thôi!",
-        "Thanh tra... tôi có $100 đây, coi như hôm nay tôi chưa tới được không?"
+        "Thanh tra... tôi có $300 đây, coi như hôm nay tôi chưa tới được không?"
       ],
       "scanned": "Cái đó... con gái tôi đang bệnh nặng, xin thanh tra đừng bắt tôi!"
     },
-    "bribe": 100,
+    "bribe": 300,
     "news": {
       "ALLOW": "Thuốc biến đổi gien không rõ nguồn gốc gây ngộ độc hàng loạt ở Quận Tân Bình",
       "ARREST": "Bắt thợ sửa ống nước buôn thuốc biến đổi gien — con gái ông đang nằm viện chờ tiền chữa bệnh",
@@ -321,7 +321,7 @@
         "Thôi mà thanh tra... tan ca em mời anh ly cà phê, mình nói chuyện sau được không?"
       ]
     },
-    "bribe": 150,
+    "bribe": 400,
     "news": {
       "ALLOW": "Kẻ lừa đảo tiền ảo Trần Minh Khoa lại dụ dỗ hàng trăm nhà đầu tư",
       "ARREST": "Bắt giữ đối tượng lừa đảo tiền ảo dùng giấy phép giả"
@@ -1140,7 +1140,7 @@
       "alibi": "Mang đặc sản quê lên biếu thằng con trai",
       "triggers": {
         "if_asked_about_cooler": "Mời sếp 'cầm mấy con mực về nhậu'",
-        "if_threatened": "Dúi $200 rồi nháy mắt"
+        "if_threatened": "Dúi $500 rồi nháy mắt"
       }
     },
     "lines": {
@@ -1148,11 +1148,11 @@
       "luggage": "Khô mực với nước mắm biếu thằng con thôi sếp ơi. Sếp cầm mấy con về nhậu nha!",
       "threat": [
         "Ấy ấy sếp, có gì từ từ nói.",
-        "Sếp... đây có chút $200 uống cà phê, sếp cho em qua nha?"
+        "Sếp... đây có chút $500 uống cà phê, sếp cho em qua nha?"
       ],
       "scanned": "Ơ... cái đó... chắc ai đó gửi nhờ em sếp ơi!"
     },
-    "bribe": 200,
+    "bribe": 500,
     "news": {
       "ALLOW": "Phát hiện đường dây buôn mật gấu, vảy tê tê từ Phú Quốc",
       "ARREST": "Thu giữ mật gấu, vảy tê tê giấu trong thùng khô mực"
@@ -1433,7 +1433,7 @@
     },
     "crime": "CONTRABAND",
     "crime_detail": "Tái phạm: giấu 40 ống thuốc biến đổi gien trong thùng dụng cụ",
-    "bribe": 250,
+    "bribe": 600,
     "avatar": {
       "skin": "#ffdbac",
       "hair": "short",
@@ -1491,7 +1491,7 @@
       "true_story": "Lần trước được cho qua trót lọt nên lần này buôn gấp bốn lần, giấu 40 ống thuốc biến đổi gien trong thùng dụng cụ. Con gái đã được chữa nhưng giờ ham tiền.",
       "alibi": "Lại đi sửa ống nước, công trình lớn nên mang thùng đồ nghề to",
       "triggers": {
-        "if_threatened": "Ngạc nhiên vì nghĩ thanh tra là đồng bọn, dúi phong bì $250",
+        "if_threatened": "Ngạc nhiên vì nghĩ thanh tra là đồng bọn, dúi phong bì $600",
         "if_asked_about_box": "Cười: \"Như lần trước thôi mà thanh tra\""
       }
     },
@@ -1500,7 +1500,7 @@
       "luggage": "Như lần trước thôi mà thanh tra, đồ nghề cả.",
       "threat": [
         "Ơ kìa, mình là người quen mà thanh tra...",
-        "Thôi thì... $250 đây, coi như phí \"người quen\" nhé?"
+        "Thôi thì... $600 đây, coi như phí \"người quen\" nhé?"
       ],
       "scanned": "Lần trước anh đâu có soi! Sao giờ lại làm khó tôi?!"
     },
@@ -1879,7 +1879,7 @@
     },
     "crime": "CONTRABAND",
     "crime_detail": "Tái phạm: giấu 120 vi mạch thần kinh lậu trong vali đôi đáy",
-    "bribe": 300,
+    "bribe": 800,
     "avatar": {
       "skin": "#ffdbac",
       "hair": "long",
@@ -1934,10 +1934,10 @@
     "ai_persona": {
       "personality": "Quyến rũ, tự tin thái quá vì lần trước trót lọt, coi thanh tra như \"bạn thân\"",
       "temper": "calm",
-      "true_story": "Lần trước được cho qua nên băng đảng giao gấp ba hàng: 120 vi mạch thần kinh lậu trong vali đôi đáy. Sẵn sàng chi $300 cho thanh tra.",
+      "true_story": "Lần trước được cho qua nên băng đảng giao gấp ba hàng: 120 vi mạch thần kinh lậu trong vali đôi đáy. Sẵn sàng chi $800 cho thanh tra.",
       "alibi": "Lại về chụp ảnh thời trang",
       "triggers": {
-        "if_threatened": "Dúi phong bì $300, nháy mắt: \"Như lần trước nhé anh\""
+        "if_threatened": "Dúi phong bì $800, nháy mắt: \"Như lần trước nhé anh\""
       }
     },
     "lines": {
@@ -1945,7 +1945,7 @@
       "luggage": "Vali thời trang thôi mà anh, như lần trước đó~",
       "threat": [
         "Anh lại giận em à?",
-        "Thôi mà anh... $300, như lần trước nhé?"
+        "Thôi mà anh... $800, như lần trước nhé?"
       ],
       "scanned": "Anh... anh dám?! Anh có biết em làm cho ai không?"
     },
@@ -2143,7 +2143,7 @@
   },
   {
     "id": "npc_308",
-    "bribe": 600,
+    "bribe": 1200,
     "requires": [
       {
         "npc": "npc_005",
@@ -2213,10 +2213,10 @@
     "ai_persona": {
       "personality": "Luật sư sang trọng, cực kỳ điềm tĩnh, nói chuyện như đang thương lượng hợp đồng",
       "temper": "calm",
-      "true_story": "Luật sư của \"Rắn\" Vũ Đức Thắng. Giấy tờ hoàn toàn hợp lệ, không buôn lậu gì. Đến để mua chuộc thanh tra $600 đổi lời khai, giúp thân chủ được giảm án.",
+      "true_story": "Luật sư của \"Rắn\" Vũ Đức Thắng. Giấy tờ hoàn toàn hợp lệ, không buôn lậu gì. Đến để mua chuộc thanh tra $1200 đổi lời khai, giúp thân chủ được giảm án.",
       "alibi": "Đến tòa án làm việc",
       "triggers": {
-        "if_threatened": "Mỉm cười đẩy phong bì $600 qua khe kính: \"Chỉ cần anh nhớ nhầm một chút\""
+        "if_threatened": "Mỉm cười đẩy phong bì $1200 qua khe kính: \"Chỉ cần anh nhớ nhầm một chút\""
       }
     },
     "lines": {
@@ -2224,7 +2224,7 @@
       "luggage": "Hồ sơ vụ án và bản khai của anh. Anh có muốn... nhớ lại cho chính xác hơn không?",
       "threat": [
         "Anh không cần dọa tôi, giấy tờ tôi hoàn toàn hợp lệ.",
-        "$600. Chỉ cần anh nhớ nhầm một chút trước tòa."
+        "$1200. Chỉ cần anh nhớ nhầm một chút trước tòa."
       ]
     },
     "news": {
@@ -2244,7 +2244,7 @@
     "id": "npc_310",
     "minDay": 3,
     "network": true,
-    "bribe": 200,
+    "bribe": 450,
     "crime": "CONTRABAND",
     "crime_detail": "Giấu vi mạch thần kinh lậu trong hộp đàn violin cho Hắc Long",
     "avatar": {
@@ -2309,7 +2309,7 @@
       "alibi": "Nghệ sĩ violin đến biểu diễn ở Nhà hát Thành phố",
       "triggers": {
         "if_asked_about_violin": "Ôm chặt hộp đàn, nói đàn cổ rất quý không được mở",
-        "if_threatened": "Dúi $200, xin đừng mở đàn"
+        "if_threatened": "Dúi $450, xin đừng mở đàn"
       }
     },
     "lines": {
@@ -2317,7 +2317,7 @@
       "luggage": "Đàn cổ, rất quý. Đừng mở, độ ẩm sẽ làm hỏng gỗ.",
       "threat": [
         "Đừng mà...",
-        "$200, xin anh đừng mở đàn của tôi."
+        "$450, xin anh đừng mở đàn của tôi."
       ],
       "scanned": "Tôi... tôi chỉ được thuê mang hộ thôi!"
     },
@@ -2500,7 +2500,7 @@
     "id": "npc_390",
     "fixedDay": 7,
     "boss": true,
-    "bribe": 1000,
+    "bribe": 2500,
     "crime": "BOSS",
     "crime_detail": "Trùm đường dây Hắc Long dùng danh tính giả \"Lâm Quốc Bảo\"",
     "avatar": {
@@ -2571,7 +2571,7 @@
       "alibi": "Nhà đầu tư đến ký hợp đồng bảo vệ",
       "triggers": {
         "if_asked_about_hac_long": "Bật cười: \"Hắc Long? Nghe như tên một bộ phim võ hiệp\"",
-        "if_threatened": "Bình thản đặt phong bì $1000 lên quầy: \"Một tháng lương của anh. Hay mười tháng?\""
+        "if_threatened": "Bình thản đặt phong bì $2500 lên quầy: \"Một tháng lương của anh. Hay mười tháng?\""
       }
     },
     "lines": {
@@ -2579,7 +2579,7 @@
       "luggage": "Hợp đồng và một cây bút. Người làm ăn chỉ cần có thế.",
       "threat": [
         "Hắc Long? Nghe như tên phim võ hiệp vậy.",
-        "$1000 đây. Một tháng lương của anh... hay là mười tháng nhỉ?"
+        "$2500 đây. Một tháng lương của anh... hay là mười tháng nhỉ?"
       ],
       "mismatch": "Máy móc nhà nước hay lỗi lắm, thanh tra. Tôi không chịu trách nhiệm cho dữ liệu của các anh.",
       "leverage": "Chào thanh tra. Con bé nhà anh đang ngồi chờ bố mẹ về ăn tối đấy. Anh đóng dấu cho tôi, tối nay nó về."

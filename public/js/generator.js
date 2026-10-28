@@ -226,7 +226,8 @@ function makeFiller(rng, idx, ctx, violation, avoidAvatars) {
         : 'Không tiền án',
   };
 
-  const bribe = crime && chance(rng, 0.6) ? pick(rng, [80, 120, 150]) : undefined;
+  // Phong bì phải đủ hấp dẫn so với lương một lượt đúng ($50–70)
+  const bribe = crime && chance(rng, 0.6) ? pick(rng, [250, 350, 450]) : undefined;
 
   // Tính cách & câu chuyện cho AI nhập vai
   const [personality, temper] = pick(rng, PERSONALITIES);

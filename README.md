@@ -33,7 +33,7 @@ Mở http://localhost:3000 (trên điện thoại cùng mạng Wi-Fi: `http://<I
 | 2 | Mở Tờ khai hải quan, Giấy phép lao động, quy tắc của ngày |
 | 3 | Mở máy soi X-quang 🩻 và **Phòng thẩm vấn** 🔦 |
 | 4 | Mở máy tra vân tay 🖐 (một ngày đặc biệt ngẫu nhiên có thể rơi vào ngày 2–4) |
-| 5 | **Chỉ thị mật**: Trưởng trạm ra lệnh cho một người qua. Nghe lời có $300, cãi lệnh bị trừ tiền + 1 cảnh cáo nhưng giữ được bằng chứng |
+| 5 | **Chỉ thị mật**: Trưởng trạm ra lệnh cho một người qua. Nghe lời có $600, cãi lệnh bị trừ tiền + 1 cảnh cáo nhưng giữ được bằng chứng |
 | 6 | **Bé Na bị bắt cóc**: cho gã khăn đỏ qua thì con về — hoặc bắt hắn và moi ra nơi giam con bé trong Phòng thẩm vấn |
 | 7 | **Hắc Long** qua quầy dưới danh tính giả. Đêm đó cả nhà rời thành phố: **đổi vai** — AI là thanh tra biên phòng hỏi vặn *bạn* về danh tính mới |
 
@@ -41,7 +41,9 @@ Mở http://localhost:3000 (trên điện thoại cùng mạng Wi-Fi: `http://<I
 - Hợp lệ → Cho qua · Vi phạm quy tắc → Từ chối · Giấy tờ giả / buôn lậu / truy nã → Bắt giữ. Đúng được lương theo cấp bậc, sai −$30 và 1 cảnh cáo.
 - **Phòng thẩm vấn**: sau khi bắt người của đường dây, hỏi 3 câu. Hỏi trúng điều hắn giấu thì hắn dao động; hỏi dồn lần nữa hoặc dọa thẳng thì hắn khai. Lời khai cho manh mối nhận diện Hắc Long (3 manh mối) hoặc nơi giam bé Na.
 - **Vượt cửa khẩu (đổi vai)**: học thuộc danh tính mới, rồi trả lời 3 câu của thanh tra biên phòng. Sai 2 câu, hoặc lỡ miệng gọi con là "Na", nhắc nghề thanh tra hay Hắc Long → bị giữ lại.
-- Vẫn giữ: hối lộ & thanh tra nội bộ, gia đình & chi tiêu, cửa hàng nâng cấp, cấp bậc & kỹ năng, sự kiện ban đêm (đêm 1–4), khách quen, báo sáng.
+- **Hối lộ**: phong bì $250–2500 (gấp 4–6 lần lương một lượt). Mỗi phong bì 30% bị thanh tra nội bộ tịch thu + 1 cảnh cáo; nhận rồi mà không cho qua thì bị chính người đưa tiền tố cáo (chắc chắn bị phát hiện).
+- **Cửa hàng**: đồ xịn đắt — máy phát hiện nói dối $400, máy đối chiếu $450 (≈4 đêm để dành); máy soi / vân tay / sổ thẩm vấn / cà phê $140–160; luật sư $250.
+- Vẫn giữ: thanh tra nội bộ, gia đình & chi tiêu, cửa hàng nâng cấp, cấp bậc & kỹ năng, sự kiện ban đêm (đêm 1–4), khách quen, báo sáng.
 - **7 kết thúc**: Người hạ bệ Hắc Long · Cái giá của công lý · Kẻ hai mặt · Bạn chọn con · Tay sai của Hắc Long · Con rồng vẫn ngủ yên · Gục ngã ở vạch cuối — kèm hậu ký và số phận từng nhân vật.
 - Game Over sớm khi: quá 3 cảnh cáo, không đủ tiền nhà, hoặc mất cả gia đình.
 

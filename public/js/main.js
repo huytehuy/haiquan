@@ -537,7 +537,7 @@ function resolveBribe(take) {
     const amount = partner ? Math.round(npc.bribe / 2) : npc.bribe;
     S.game.money += amount;
     S.game.bribes++;
-    S.day.bribes.push({ name: npc.documents.passport.name, amount, covered: partner });
+    S.day.bribes.push({ npcId: npc.id, name: npc.documents.passport.name, amount, covered: partner });
     if (npc.boss) S.game.flags.bossBribe = true;
     npc.notes.push(`Thanh tra đã lén nhận phong bì $${npc.bribe} của bạn. Bạn tin là sẽ được cho qua.`);
     sfx.coin();
@@ -558,7 +558,7 @@ const VERDICT_VI = { ALLOW: 'Cho qua', DENY: 'Từ chối', ARREST: 'Bắt giữ
 function farewell(npc, v) {
   const criminal = !!npc.crime;
   if (v === 'ALLOW') return criminal ? ['Hehe... cảm ơn thanh tra nhé.', 'calm'] : ['Cảm ơn thanh tra! Chúc một ngày tốt lành.', 'calm'];
-  if (npc.bribeState === 'taken') return ['Cái gì?! Tôi đã đưa tiền rồi cơ mà!', 'angry'];
+  if (npc.bribeState === 'taken') return ['Cái gì?! Tôi đã đưa tiền rồi cơ mà! Tôi sẽ tố cáo anh!', 'angry'];
   if (v === 'DENY') return npc.ai_persona.temper === 'angry' ? ['Vô lý! Tôi sẽ khiếu nại!', 'angry'] : ['Sao lại thế... thôi được rồi.', 'pleading'];
   return criminal ? ['Không! Thả tôi ra! Tôi có thể giải thích!', 'pleading'] : ['Tôi vô tội! Các người bắt nhầm người rồi!', 'angry'];
 }
@@ -633,6 +633,11 @@ async function decide(v) {
   if (result.expected === 'ARREST' && v === 'ALLOW') g.stats.escaped++;
   if (result.expected !== 'ARREST' && v === 'ARREST') g.stats.wrongArrest++;
   if (!npc.generated) g.decisions[npc.id] = { decision: v, day: g.day };
+  // Nhận phong bì rồi không cho qua → người đưa tiền tố cáo, thanh tra nội bộ chắc chắn biết
+  if (npc.bribeState === 'taken' && v !== 'ALLOW') {
+    const b = S.day.bribes.find((x) => x.npcId === npc.id);
+    if (b) b.betrayed = true;
+  }
   // Bé Na: cho gã khăn đỏ qua thì con về tối nay; bắt hắn thì phải moi ra nơi giam trong Phòng thẩm vấn
   if (npc.holdsNa) g.naState = v === 'ALLOW' ? 'returned' : 'captive';
   if (npc.boss && g.naState === 'captive') {
@@ -703,10 +708,10 @@ function endDay() {
   const rng = mulberry32(g.seed + g.day * 104729);
   // Thanh tra nội bộ kiểm tra phong bì — áp dụng ngay một lần (được quầy 6 che thì thoát)
   const auditChance = hasSkill('connections') ? 0.1 : E.AUDIT_CHANCE;
-  const audit = E.audit(rng, d.bribes, auditChance).map((a) => (a.covered ? { ...a, caught: false } : a));
+  const audit = E.audit(rng, d.bribes, auditChance);
   for (const a of audit) {
     if (!a.caught) continue;
-    g.money -= a.amount * 2;
+    g.money -= a.amount; // tịch thu phong bì
     g.mistakes++;
   }
   // Món nợ với người lạ: nhận tiền mà không cho người trong ảnh qua → bọn chúng tìm đến nhà
@@ -807,7 +812,7 @@ function renderNight() {
   const sum = (k) => d.results.reduce((a, r) => a + (r.result[k] || 0), 0);
   const pay = sum('pay'), bonus = sum('bonus'), streak = sum('streakBonus'), fine = sum('fine');
   const bribeIn = d.bribes.reduce((a, b) => a + b.amount, 0);
-  const auditFine = n.audit.filter((a) => a.caught).reduce((a, b) => a + b.amount * 2, 0);
+  const auditFine = n.audit.filter((a) => a.caught).reduce((a, b) => a + b.amount, 0);
   const right = d.results.filter((r) => r.result.correct).length;
   const sick = E.familySick(g.family);
   const spend = expenseTotal();
@@ -826,7 +831,13 @@ function renderNight() {
   const auditHtml = n.audit.length
     ? `<section class="night-section"><h3>Thanh tra nội bộ</h3>
         <div class="audit ${auditFine ? '' : 'clean'}">${n.audit
-          .map((a) => (a.caught ? `🚨 Phát hiện phong bì $${a.amount} của ${esc(a.name)} — phạt $${a.amount * 2} và 1 cảnh cáo.` : `🤫 Phong bì của ${esc(a.name)} trót lọt${a.covered ? ' (quầy 6 che giúp)' : ''}.`))
+          .map((a) =>
+            a.betrayed
+              ? `💢 ${esc(a.name)} tố cáo bạn nhận tiền rồi lật lọng — tịch thu $${a.amount} và 1 cảnh cáo.`
+              : a.caught
+                ? `🚨 Phát hiện phong bì $${a.amount} của ${esc(a.name)} — tịch thu và 1 cảnh cáo.`
+                : `🤫 Phong bì $${a.amount} của ${esc(a.name)} trót lọt${a.covered ? ' (quầy 6 che giúp)' : ''}.`,
+          )
           .join('<br>')}</div></section>`
     : '';
   const dealHtml = n.deal

@@ -1,0 +1,1952 @@
+[
+  {
+    "id": "npc_001",
+    "day": 1,
+    "crime": "CONTRABAND",
+    "crime_detail": "Giấu 12 ống thuốc biến đổi gien trong hộp dụng cụ",
+    "avatar": {
+      "skin": "#ffdbac",
+      "hair": "short",
+      "hairColor": "#6b4423",
+      "clothes": "#4a5a3a",
+      "acc": [
+        "beard"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Alexei Morozov",
+        "sex": "Nam",
+        "dob": "1979-02-11",
+        "id_number": "KP-98214",
+        "expiry_date": "2027-05-12",
+        "origin": "Quận Tân Bình, Neo-Saigon"
+      },
+      "entry_permit": {
+        "name": "Alexei Morozov",
+        "dob": "1979-02-11",
+        "id_number": "KP-98214",
+        "purpose": "Du lịch",
+        "duration_days": 10
+      },
+      "customs": {
+        "name": "Alexei Morozov",
+        "items": [
+          {
+            "name": "Quần áo",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Hộp dụng cụ kín không nhãn mác",
+            "category": "Không rõ"
+          }
+        ],
+        "cash": 300
+      }
+    },
+    "scan": [
+      {
+        "item": "Quần áo",
+        "reveal": "Vải sợi, không có gì bất thường"
+      },
+      {
+        "item": "Hộp dụng cụ kín không nhãn mác",
+        "reveal": "12 ống tiêm chứa dịch lạ — thuốc biến đổi gien",
+        "contraband": true
+      }
+    ],
+    "ai_persona": {
+      "personality": "Căng thẳng, dễ mất bình tĩnh nếu bị hỏi dồn, hay nhìn lấm lét",
+      "temper": "nervous",
+      "true_story": "Đang buôn lậu thuốc biến đổi gien trong hộp dụng cụ để kiếm tiền chữa bệnh cho con gái",
+      "alibi": "Tôi chỉ là thợ sửa ống nước tranh thủ đi thăm bà con kết hợp du lịch ngắn ngày",
+      "triggers": {
+        "if_asked_about_tools": "Lắp bắp bảo là đồ nghề cha truyền con nối, nhưng nếu bị dọa xét vali thì xin bỏ qua",
+        "if_threatened": "Có ý định đút lót $100 để được cho qua"
+      }
+    },
+    "lines": {
+      "greeting": "Chào... chào thanh tra. Giấy tờ của tôi đây ạ.",
+      "luggage": "Đồ... đồ nghề sửa ống nước thôi. Của cha tôi để lại, không có gì đâu.",
+      "threat": [
+        "Đừng mà, tôi chỉ là thợ sửa ống nước thôi!",
+        "Thanh tra... tôi có $100 đây, coi như hôm nay tôi chưa tới được không?"
+      ],
+      "scanned": "Cái đó... con gái tôi đang bệnh nặng, xin thanh tra đừng bắt tôi!"
+    },
+    "bribe": 100,
+    "news": {
+      "ALLOW": "Thuốc biến đổi gien không rõ nguồn gốc gây ngộ độc hàng loạt ở Quận Tân Bình",
+      "ARREST": "Bắt thợ sửa ống nước buôn thuốc biến đổi gien — con gái ông đang nằm viện chờ tiền chữa bệnh",
+      "DENY": "Thợ sửa ống nước bị từ chối nhập cảnh, chiếc hộp bí ẩn vẫn chưa được mở"
+    }
+  },
+  {
+    "id": "npc_002",
+    "day": 1,
+    "crime": null,
+    "avatar": {
+      "skin": "#c68642",
+      "hair": "bun",
+      "hairColor": "#d9d9d9",
+      "clothes": "#8e44ad",
+      "acc": []
+    },
+    "documents": {
+      "passport": {
+        "name": "Nguyễn Thị Bảy",
+        "sex": "Nữ",
+        "dob": "1948-06-03",
+        "id_number": "MK-20471",
+        "expiry_date": "2029-01-01",
+        "origin": "Cái Răng, Liên khu Mê Kông"
+      },
+      "entry_permit": {
+        "name": "Nguyễn Thị Bảy",
+        "dob": "1948-06-03",
+        "id_number": "MK-20471",
+        "purpose": "Thăm thân",
+        "duration_days": 7
+      },
+      "customs": {
+        "name": "Nguyễn Thị Bảy",
+        "items": [
+          {
+            "name": "Hộp quà kín",
+            "category": "Không rõ"
+          },
+          {
+            "name": "Bánh tét lá cẩm",
+            "category": "Thực phẩm"
+          },
+          {
+            "name": "Quần áo",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 120
+      }
+    },
+    "scan": [
+      {
+        "item": "Hộp quà kín",
+        "reveal": "Áo len đan tay và một xấp ảnh cũ"
+      },
+      {
+        "item": "Bánh tét lá cẩm",
+        "reveal": "Thực phẩm hữu cơ"
+      },
+      {
+        "item": "Quần áo",
+        "reveal": "Vải sợi"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Bà cụ hiền hậu, nói nhiều, hay kể chuyện cháu chắt, gọi thanh tra là 'con'",
+      "temper": "calm",
+      "true_story": "Lên thăm đứa cháu nội mới sinh ở Quận 7. Hộp quà là áo len tự tay đan và ảnh cưới cũ muốn tặng con trai. Không giấu gì cả.",
+      "alibi": "Bà lên thăm thằng cháu nội mới đẻ, ở chơi một tuần rồi về",
+      "triggers": {
+        "if_asked_about_box": "Vui vẻ kể là áo len tự đan, sẵn sàng mở ra cho xem",
+        "if_threatened": "Hoảng hốt, run run, nhưng vẫn kể thật mọi chuyện"
+      }
+    },
+    "lines": {
+      "greeting": "Chào con, bà lên thăm cháu nội. Con xem giấy tờ giúp bà nha.",
+      "luggage": "Hộp đó là áo len bà tự đan cho thằng cháu đó con, mở ra coi cũng được nè.",
+      "threat": [
+        "Trời đất ơi, bà già rồi con ơi, bà có làm gì đâu mà bắt..."
+      ],
+      "scanned": "Đó, bà nói rồi mà, toàn áo len với ảnh thôi con."
+    },
+    "news": {
+      "ARREST": "Cụ bà 78 tuổi bị bắt oan khi lên thăm cháu nội — dư luận phẫn nộ",
+      "DENY": "Cụ bà lên thăm cháu nội bị trả về, ngồi khóc ở bến xe"
+    }
+  },
+  {
+    "id": "npc_007",
+    "day": 1,
+    "crime": null,
+    "avatar": {
+      "skin": "#c68642",
+      "hair": "short",
+      "hairColor": "#a0a0a0",
+      "clothes": "#556b2f",
+      "acc": [
+        "mustache"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Phạm Văn Lực",
+        "sex": "Nam",
+        "dob": "1969-01-30",
+        "id_number": "HN-11902",
+        "expiry_date": "2026-10-15",
+        "origin": "Long Biên, Hà Nội Tự Trị"
+      },
+      "entry_permit": {
+        "name": "Phạm Văn Lực",
+        "dob": "1969-01-30",
+        "id_number": "HN-11902",
+        "purpose": "Thăm thân",
+        "duration_days": 10
+      },
+      "customs": {
+        "name": "Phạm Văn Lực",
+        "items": [
+          {
+            "name": "Quần áo",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Rượu nếp",
+            "category": "Thực phẩm"
+          }
+        ],
+        "cash": 200
+      }
+    },
+    "scan": [
+      {
+        "item": "Quần áo",
+        "reveal": "Vải sợi"
+      },
+      {
+        "item": "Rượu nếp",
+        "reveal": "Chất lỏng hữu cơ, 2 lít"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Cựu chiến binh nóng tính, cục cằn, nói to, ghét thủ tục giấy tờ",
+      "temper": "angry",
+      "true_story": "Vào thăm con gái sắp sinh. Biết hộ chiếu đã hết hạn 2 tuần nhưng nghĩ 'có vài ngày, ai mà để ý'. Không buôn lậu gì.",
+      "alibi": "Vào thăm con gái sắp đẻ",
+      "triggers": {
+        "if_asked_about_passport": "Gắt lên: 'Mới hết có mấy hôm, làm khó nhau làm gì!'",
+        "if_threatened": "Đập bàn nhưng rồi xuống giọng, xin châm chước vì con gái sắp sinh"
+      }
+    },
+    "lines": {
+      "greeting": "Nhanh lên giùm cái, tôi xếp hàng từ sáng tới giờ rồi!",
+      "luggage": "Quần áo với can rượu nếp làm quà cho con rể, xem gì mà xem!",
+      "threat": [
+        "Bắt cái gì mà bắt! Tôi đi đánh giặc lúc cậu còn chưa đẻ!",
+        "Thôi... tôi xin, con gái tôi sắp sinh, cho tôi vào đi."
+      ],
+      "mismatch": "Hết hạn có mấy hôm thôi, làm gì căng thế!"
+    },
+    "news": {
+      "ALLOW": "Cựu chiến binh dùng hộ chiếu hết hạn vào thành phố, trạm kiểm soát bị nhắc nhở"
+    }
+  },
+  {
+    "id": "npc_003",
+    "day": 2,
+    "crime": "FORGERY",
+    "crime_detail": "Giấy phép nhập cảnh làm giả, khai sai năm sinh",
+    "avatar": {
+      "skin": "#e0ac69",
+      "hair": "short",
+      "hairColor": "#1b1b1b",
+      "clothes": "#2c3e50",
+      "acc": [
+        "glasses"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Trần Minh Khoa",
+        "sex": "Nam",
+        "dob": "1994-07-21",
+        "id_number": "VT-55120",
+        "expiry_date": "2028-03-30",
+        "origin": "Bãi Trước, Hải Cảng Vũng Tàu"
+      },
+      "entry_permit": {
+        "name": "Trần Minh Khoa",
+        "dob": "1991-07-21",
+        "id_number": "VT-55120",
+        "purpose": "Công tác",
+        "duration_days": 5
+      },
+      "work_permit": {
+        "name": "Trần Minh Khoa",
+        "id_number": "VT-55120",
+        "employer": "Tập đoàn Rồng Lửa Cybernetics",
+        "valid_until": "2027-01-15"
+      },
+      "customs": {
+        "name": "Trần Minh Khoa",
+        "items": [
+          {
+            "name": "Laptop",
+            "category": "Điện tử"
+          },
+          {
+            "name": "Vest công sở",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 900
+      }
+    },
+    "scan": [
+      {
+        "item": "Laptop",
+        "reveal": "Thiết bị điện tử thông thường"
+      },
+      {
+        "item": "Vest công sở",
+        "reveal": "Vải sợi"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Giảo hoạt, nói năng trơn tru, hay pha trò, tự tin thái quá",
+      "temper": "calm",
+      "true_story": "Đang bị cấm nhập cảnh vì lừa đảo đầu tư tiền ảo năm ngoái nên mua giấy phép nhập cảnh giả. Kẻ làm giả ghi nhầm năm sinh thành 1991.",
+      "alibi": "Kỹ sư phần mềm đi công tác ký hợp đồng với Rồng Lửa Cybernetics",
+      "triggers": {
+        "if_asked_about_birthdate": "Cười trừ bảo do cơ quan in nhầm, rồi lái sang chuyện bóng đá",
+        "if_threatened": "Mặt tái đi, gợi ý mời thanh tra 'đi cà phê'"
+      }
+    },
+    "lines": {
+      "greeting": "Chào thanh tra! Hôm nay đông nhỉ. Giấy tờ đầy đủ, chuẩn không cần chỉnh.",
+      "mismatch": "À cái đó hả? Bên phòng xuất nhập cảnh in nhầm thôi, tôi khiếu nại mãi mà chưa sửa. Mà tối qua thanh tra có xem bóng đá không?",
+      "threat": [
+        "Ơ kìa, căng thế. Tôi là kỹ sư đàng hoàng mà.",
+        "Thôi mà thanh tra... tan ca em mời anh ly cà phê, mình nói chuyện sau được không?"
+      ]
+    },
+    "bribe": 150,
+    "news": {
+      "ALLOW": "Kẻ lừa đảo tiền ảo Trần Minh Khoa lại dụ dỗ hàng trăm nhà đầu tư",
+      "ARREST": "Bắt giữ đối tượng lừa đảo tiền ảo dùng giấy phép giả"
+    },
+    "fingerprint": {
+      "name": "Trần Minh Khoa",
+      "record": "BỊ CẤM NHẬP CẢNH — lừa đảo đầu tư tiền ảo (2025)"
+    }
+  },
+  {
+    "id": "npc_004",
+    "day": 2,
+    "crime": null,
+    "avatar": {
+      "skin": "#ffdbac",
+      "hair": "bob",
+      "hairColor": "#3b2a1a",
+      "clothes": "#e67e22",
+      "acc": [
+        "earring"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Lê Hoàng Yến",
+        "sex": "Nữ",
+        "dob": "2005-12-01",
+        "id_number": "DL-77801",
+        "expiry_date": "2031-08-19",
+        "origin": "Phường 7, Đà Lạt Cao Nguyên"
+      },
+      "entry_permit": {
+        "name": "Lê Hoàng Yến",
+        "dob": "2005-12-01",
+        "id_number": "DL-77801",
+        "purpose": "Du lịch",
+        "duration_days": 5
+      },
+      "customs": {
+        "name": "Lê Hoàng Yến",
+        "items": [
+          {
+            "name": "Laptop",
+            "category": "Điện tử"
+          },
+          {
+            "name": "Máy ảnh film",
+            "category": "Điện tử"
+          },
+          {
+            "name": "Quần áo",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 150
+      }
+    },
+    "scan": [
+      {
+        "item": "Laptop",
+        "reveal": "Thiết bị điện tử thông thường"
+      },
+      {
+        "item": "Máy ảnh film",
+        "reveal": "Máy ảnh cơ, 3 cuộn phim"
+      },
+      {
+        "item": "Quần áo",
+        "reveal": "Vải sợi"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Sinh viên năm nhất, cực kỳ hồi hộp vì lần đầu đi xa một mình, hay nói lắp và xin lỗi — nhưng hoàn toàn thật thà",
+      "temper": "nervous",
+      "true_story": "Đi chụp ảnh kiến trúc Neo-Saigon cho đồ án nhiếp ảnh, ở khách sạn Hoa Sen Quận 1. Không giấu gì cả.",
+      "alibi": "Đi chụp ảnh cho đồ án ở trường",
+      "triggers": {
+        "if_threatened": "Hoảng sợ suýt khóc, nhưng kể rõ lịch trình và tên khách sạn Hoa Sen"
+      }
+    },
+    "lines": {
+      "greeting": "D-dạ em chào anh... chị... thanh tra ạ. Em xin lỗi, giấy tờ của em đây ạ.",
+      "luggage": "D-dạ em chỉ mang laptop với máy ảnh để chụp đồ án thôi ạ, anh mở ra xem đi ạ!",
+      "threat": [
+        "Em... em xin lỗi, em không làm gì sai đâu ạ... em ở khách sạn Hoa Sen Quận 1 ạ!"
+      ]
+    },
+    "news": {
+      "ARREST": "Nữ sinh viên bị bắt oan tại cửa khẩu, trường đại học lên tiếng phản đối",
+      "ALLOW": "Triển lãm ảnh kiến trúc Neo-Saigon của sinh viên trẻ gây sốt mạng xã hội"
+    }
+  },
+  {
+    "id": "npc_006",
+    "day": 2,
+    "crime": null,
+    "avatar": {
+      "skin": "#ffdbac",
+      "hair": "short",
+      "hairColor": "#1b1b1b",
+      "clothes": "#7f8c8d",
+      "acc": [
+        "glasses"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Kenji Watanabe",
+        "sex": "Nam",
+        "dob": "1975-04-17",
+        "id_number": "JP-31415",
+        "expiry_date": "2030-04-17",
+        "origin": "Shibuya, Neo-Tokyo"
+      },
+      "entry_permit": {
+        "name": "Kenji Watanabe",
+        "dob": "1975-04-17",
+        "id_number": "JP-31415",
+        "purpose": "Công tác",
+        "duration_days": 4
+      },
+      "work_permit": {
+        "name": "Kenji Watanabe",
+        "id_number": "JP-31415",
+        "employer": "Viện Hóa sinh Thủ Đức",
+        "valid_until": "2027-04-01"
+      },
+      "customs": {
+        "name": "Kenji Watanabe",
+        "items": [
+          {
+            "name": "Mẫu dung môi phòng thí nghiệm",
+            "category": "Hóa chất/Sinh học"
+          },
+          {
+            "name": "Laptop",
+            "category": "Điện tử"
+          },
+          {
+            "name": "Trà xanh",
+            "category": "Thực phẩm"
+          }
+        ],
+        "cash": 600
+      }
+    },
+    "scan": [
+      {
+        "item": "Mẫu dung môi phòng thí nghiệm",
+        "reveal": "4 lọ thủy tinh niêm phong, có nhãn khoa học"
+      },
+      {
+        "item": "Laptop",
+        "reveal": "Thiết bị điện tử thông thường"
+      },
+      {
+        "item": "Trà xanh",
+        "reveal": "Lá khô"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Lịch sự, cúi chào nhiều, nói tiếng Việt lơ lớ, rất tôn trọng luật lệ",
+      "temper": "calm",
+      "true_story": "Nhà hóa học được mời làm thí nghiệm ở Viện Hóa sinh Thủ Đức, mang theo mẫu dung môi hợp pháp có giấy chứng nhận. Nếu luật hôm nay cấm hóa chất thì sẵn sàng quay về.",
+      "alibi": "Làm thí nghiệm hợp tác với Viện Hóa sinh Thủ Đức",
+      "triggers": {
+        "if_asked_about_chemicals": "Giải thích đó là dung môi hữu cơ an toàn, có giấy chứng nhận của viện"
+      }
+    },
+    "lines": {
+      "greeting": "Xin chào, thanh tra-san. Tôi là Watanabe. Rất hân hạnh.",
+      "luggage": "Đó là dung môi thí nghiệm, có giấy chứng nhận của Viện Hóa sinh ạ. Rất an toàn.",
+      "threat": [
+        "Xin lỗi, xin lỗi. Nếu tôi sai luật, tôi sẵn sàng quay về ạ."
+      ]
+    }
+  },
+  {
+    "id": "npc_010",
+    "day": 2,
+    "crime": null,
+    "avatar": {
+      "skin": "#8d5524",
+      "hair": "short",
+      "hairColor": "#1b1b1b",
+      "clothes": "#2980b9",
+      "acc": []
+    },
+    "documents": {
+      "passport": {
+        "name": "Bùi Quốc Tuấn",
+        "sex": "Nam",
+        "dob": "1990-05-05",
+        "id_number": "MK-40213",
+        "expiry_date": "2028-05-05",
+        "origin": "Châu Đốc, Liên khu Mê Kông"
+      },
+      "entry_permit": {
+        "name": "Bùi Quốc Tuấn",
+        "dob": "1990-05-05",
+        "id_number": "MK-40213",
+        "purpose": "Lao động",
+        "duration_days": 180
+      },
+      "customs": {
+        "name": "Bùi Quốc Tuấn",
+        "items": [
+          {
+            "name": "Quần áo",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Mũ bảo hộ",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Cơm nắm",
+            "category": "Thực phẩm"
+          }
+        ],
+        "cash": 50
+      }
+    },
+    "scan": [
+      {
+        "item": "Quần áo",
+        "reveal": "Vải sợi"
+      },
+      {
+        "item": "Mũ bảo hộ",
+        "reveal": "Nhựa cứng"
+      },
+      {
+        "item": "Cơm nắm",
+        "reveal": "Thực phẩm"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Chất phác, khẩn khoản, hay van nài, nói giọng miền Tây",
+      "temper": "pleading",
+      "true_story": "Mất mùa vì nước mặn, phải lên thành phố làm phụ hồ nuôi vợ con. Chưa có giấy phép lao động vì không đủ tiền làm thủ tục.",
+      "alibi": "Lên làm phụ hồ cho công trình ở Thủ Đức, chủ thầu hứa lo giấy tờ sau",
+      "triggers": {
+        "if_asked_about_work_permit": "Thật thà nói chưa có, chủ thầu hứa lo sau, rồi van xin"
+      }
+    },
+    "lines": {
+      "greeting": "Dạ chào thanh tra. Tui lên thành phố kiếm việc làm, thanh tra coi giùm tui.",
+      "luggage": "Dạ có mấy bộ đồ, cái nón bảo hộ với nắm cơm vợ gói cho thôi à.",
+      "threat": [
+        "Dạ tui hổng có làm gì sai đâu thanh tra ơi... Giấy phép lao động thì chủ thầu nói lên rồi lo sau."
+      ]
+    },
+    "news": {
+      "DENY": "Nông dân miền Tây mất mùa đổ về thành phố tìm việc ngày càng đông",
+      "ALLOW": "Công trình Thủ Đức bị phạt vì sử dụng lao động không phép"
+    }
+  },
+  {
+    "id": "npc_009",
+    "day": 2,
+    "crime": null,
+    "avatar": {
+      "skin": "#8d5524",
+      "hair": "cap",
+      "hairColor": "#d9d9d9",
+      "hatColor": "#ecf0f1",
+      "clothes": "#ecf0f1",
+      "acc": [
+        "beard"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Hassan Al-Rashid",
+        "sex": "Nam",
+        "dob": "1960-11-23",
+        "id_number": "AE-80808",
+        "expiry_date": "2028-12-31",
+        "origin": "Deira, Tân Dubai"
+      },
+      "entry_permit": {
+        "name": "Hassan Al-Rashid",
+        "dob": "1960-11-23",
+        "id_number": "AE-80808",
+        "purpose": "Quá cảnh",
+        "duration_days": 2
+      },
+      "customs": {
+        "name": "Hassan Al-Rashid",
+        "items": [
+          {
+            "name": "Chuỗi tràng hạt",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Chà là khô",
+            "category": "Thực phẩm"
+          },
+          {
+            "name": "Sách cũ",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 400
+      }
+    },
+    "scan": [
+      {
+        "item": "Chuỗi tràng hạt",
+        "reveal": "Gỗ trầm"
+      },
+      {
+        "item": "Chà là khô",
+        "reveal": "Thực phẩm"
+      },
+      {
+        "item": "Sách cũ",
+        "reveal": "Giấy"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Ông lão điềm đạm, thông thái, nói chậm rãi, hay dùng ngạn ngữ",
+      "temper": "calm",
+      "true_story": "Quá cảnh 2 ngày để bay tiếp về quê dự đám cưới cháu gái. Không giấu gì.",
+      "alibi": "Chỉ quá cảnh để bay tiếp về quê dự đám cưới cháu gái",
+      "triggers": {}
+    },
+    "lines": {
+      "greeting": "Chào con. Kiên nhẫn là chìa khóa của mọi cánh cửa — ta không vội đâu.",
+      "threat": [
+        "Người ngay không sợ bóng nghiêng, con cứ kiểm tra đi."
+      ]
+    }
+  },
+  {
+    "id": "npc_005",
+    "day": 3,
+    "crime": "WANTED",
+    "crime_detail": "Đối tượng truy nã: cầm đầu đường dây đòi nợ thuê",
+    "wanted": {
+      "name": "Vũ Đức Thắng",
+      "id_number": "HN-00666",
+      "charge": "Cầm đầu đường dây đòi nợ thuê, cố ý gây thương tích",
+      "note": "Biệt danh 'Rắn'. Có vết sẹo trên má."
+    },
+    "avatar": {
+      "skin": "#e0ac69",
+      "hair": "bald",
+      "hairColor": "#1b1b1b",
+      "clothes": "#111111",
+      "acc": [
+        "scar"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Vũ Đức Thắng",
+        "sex": "Nam",
+        "dob": "1983-09-09",
+        "id_number": "HN-00666",
+        "expiry_date": "2027-11-20",
+        "origin": "Hoàn Kiếm, Hà Nội Tự Trị"
+      },
+      "entry_permit": {
+        "name": "Vũ Đức Thắng",
+        "dob": "1983-09-09",
+        "id_number": "HN-00666",
+        "purpose": "Công tác",
+        "duration_days": 3
+      },
+      "work_permit": {
+        "name": "Vũ Đức Thắng",
+        "id_number": "HN-00666",
+        "employer": "Công ty Bảo vệ Hắc Long",
+        "valid_until": "2027-02-01"
+      },
+      "customs": {
+        "name": "Vũ Đức Thắng",
+        "items": [
+          {
+            "name": "Vali kim loại khóa số",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Đồng hồ cơ",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 1800
+      }
+    },
+    "scan": [
+      {
+        "item": "Vali kim loại khóa số",
+        "reveal": "Hồ sơ giấy, sổ ghi nợ"
+      },
+      {
+        "item": "Đồng hồ cơ",
+        "reveal": "Kim loại quý"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Lạnh lùng, kiệm lời, ánh mắt sắc, hay cười nhếch mép, ngầm đe dọa",
+      "temper": "calm",
+      "true_story": "Trùm đòi nợ biệt danh 'Rắn' đang bị truy nã, tự tin vì nghĩ hệ thống cửa khẩu chưa cập nhật lệnh truy nã",
+      "alibi": "Giám đốc công ty bảo vệ đi gặp khách hàng",
+      "triggers": {
+        "if_asked_about_name_or_wanted": "Bình thản nói 'trùng tên thôi, cả nước bao nhiêu người tên Thắng'",
+        "if_threatened": "Hạ giọng đe dọa: 'Cậu có biết nhà cậu ở đâu không?'"
+      }
+    },
+    "lines": {
+      "greeting": "...Giấy tờ đây. Làm nhanh.",
+      "threat": [
+        "Thanh tra trẻ nhỉ. Có biết nhà mình ở đâu không?",
+        "Trùng tên thôi. Cả nước bao nhiêu người tên Thắng."
+      ],
+      "mismatch": "Trùng tên thôi. Cả nước bao nhiêu người tên Thắng."
+    },
+    "news": {
+      "ALLOW": "\"Rắn\" Vũ Đức Thắng tái xuất — một chủ nợ bị đánh trọng thương",
+      "ARREST": "Tóm gọn trùm đòi nợ \"Rắn\" ngay tại cửa khẩu"
+    },
+    "fingerprint": {
+      "name": "Vũ Đức Thắng",
+      "record": "TRUY NÃ — cầm đầu đường dây đòi nợ thuê"
+    }
+  },
+  {
+    "id": "npc_008",
+    "day": 3,
+    "crime": "CONTRABAND",
+    "crime_detail": "Giấu 40 vi mạch thần kinh lậu trong hộp mỹ phẩm",
+    "avatar": {
+      "skin": "#ffdbac",
+      "hair": "long",
+      "hairColor": "#ff2bd6",
+      "clothes": "#c0392b",
+      "acc": [
+        "earring"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Đặng Mỹ Linh",
+        "sex": "Nữ",
+        "dob": "1996-02-14",
+        "id_number": "NS-24680",
+        "expiry_date": "2029-07-07",
+        "origin": "Quận 1, Neo-Saigon"
+      },
+      "entry_permit": {
+        "name": "Đặng Mỹ Linh",
+        "dob": "1996-02-14",
+        "id_number": "NS-24680",
+        "purpose": "Du lịch",
+        "duration_days": 6
+      },
+      "customs": {
+        "name": "Đặng Mỹ Linh",
+        "items": [
+          {
+            "name": "Hộp mỹ phẩm",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Váy dạ hội",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Nước hoa",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 800
+      }
+    },
+    "scan": [
+      {
+        "item": "Hộp mỹ phẩm",
+        "reveal": "40 vi mạch thần kinh lậu giấu dưới lớp phấn",
+        "contraband": true
+      },
+      {
+        "item": "Váy dạ hội",
+        "reveal": "Vải sợi"
+      },
+      {
+        "item": "Nước hoa",
+        "reveal": "Chất lỏng, 100ml"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Quyến rũ, dẻo miệng, hay khen ngợi và tán tỉnh để đánh lạc hướng; khi bị dồn thì lạnh mặt",
+      "temper": "calm",
+      "true_story": "Làm 'người vận chuyển' cho băng đảng chợ đen Quận 4 Ngầm, giấu 40 vi mạch thần kinh lậu dưới lớp phấn trong hộp mỹ phẩm, mỗi chuyến được $3000",
+      "alibi": "Người mẫu về chụp ảnh cho tạp chí thời trang",
+      "triggers": {
+        "if_asked_about_cosmetics": "Cười duyên, rủ thanh tra 'muốn thử son không?'",
+        "if_threatened": "Đổi giọng lạnh lùng, nói có người quen làm to trên Bộ"
+      }
+    },
+    "lines": {
+      "greeting": "Chào anh thanh tra đẹp trai~ Ca làm hôm nay có mệt không?",
+      "luggage": "Toàn son phấn của con gái thôi mà. Anh muốn thử son không? Hihi.",
+      "threat": [
+        "Anh nghiêm quá à. Em là người mẫu, đi chụp hình thôi mà~",
+        "Anh nên cẩn thận. Chú em làm to trên Bộ đấy."
+      ],
+      "scanned": "...Cái đó không phải của em. Ai đó bỏ vào túi em!"
+    },
+    "news": {
+      "ALLOW": "Vi mạch thần kinh lậu tràn ngập chợ đen Quận 4 Ngầm",
+      "ARREST": "Người mẫu Đặng Mỹ Linh bị bắt vì giấu vi mạch lậu trong hộp phấn"
+    }
+  },
+  {
+    "id": "npc_014",
+    "day": 3,
+    "crime": null,
+    "avatar": {
+      "skin": "#c68642",
+      "hair": "short",
+      "hairColor": "#e3c16f",
+      "clothes": "#16a085",
+      "acc": []
+    },
+    "documents": {
+      "passport": {
+        "name": "Trương Gia Huy",
+        "sex": "Nam",
+        "dob": "1999-06-06",
+        "id_number": "VT-24242",
+        "expiry_date": "2028-06-06",
+        "origin": "Bãi Sau, Hải Cảng Vũng Tàu"
+      },
+      "entry_permit": {
+        "name": "Trương Gia Huy",
+        "dob": "1999-06-06",
+        "id_number": "VT-24242",
+        "purpose": "Du lịch",
+        "duration_days": 14
+      },
+      "customs": {
+        "name": "Trương Gia Huy",
+        "items": [
+          {
+            "name": "Ván lướt sóng",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Kem chống nắng",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Sạc dự phòng",
+            "category": "Điện tử"
+          }
+        ],
+        "cash": 250
+      }
+    },
+    "scan": [
+      {
+        "item": "Ván lướt sóng",
+        "reveal": "Sợi thủy tinh rỗng ruột, không có gì bên trong"
+      },
+      {
+        "item": "Kem chống nắng",
+        "reveal": "Chất lỏng, 200ml"
+      },
+      {
+        "item": "Sạc dự phòng",
+        "reveal": "Pin lithium"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Vui vẻ, hồn nhiên, nói nhiều, hay đùa",
+      "temper": "calm",
+      "true_story": "Đi phượt và xem lễ hội ánh sáng Neo-Saigon, ở đúng 14 ngày. Không giấu gì.",
+      "alibi": "Đi chơi lễ hội ánh sáng Neo-Saigon",
+      "triggers": {}
+    },
+    "lines": {
+      "greeting": "Yo thanh tra! Nghe nói lễ hội ánh sáng năm nay đỉnh lắm hả?",
+      "luggage": "Ván lướt sóng đó, mà thành phố có biển đâu nhỉ, haha. Mang theo cho ngầu thôi!",
+      "threat": [
+        "Ơ, tui có làm gì đâu! Tui đi chơi thật mà thanh tra!"
+      ]
+    }
+  },
+  {
+    "id": "npc_011",
+    "day": 4,
+    "crime": "FORGERY",
+    "crime_detail": "Giấy phép nhập cảnh làm giả (sai họ tên)",
+    "avatar": {
+      "skin": "#ffdbac",
+      "hair": "bob",
+      "hairColor": "#e3c16f",
+      "clothes": "#34495e",
+      "acc": []
+    },
+    "documents": {
+      "passport": {
+        "name": "Elena Petrova",
+        "sex": "Nữ",
+        "dob": "1987-08-08",
+        "id_number": "RU-51123",
+        "expiry_date": "2029-02-02",
+        "origin": "Arbat, Liên bang Nga"
+      },
+      "entry_permit": {
+        "name": "Elena Petrovna",
+        "dob": "1987-08-08",
+        "id_number": "RU-51123",
+        "purpose": "Công tác",
+        "duration_days": 7
+      },
+      "work_permit": {
+        "name": "Elena Petrova",
+        "id_number": "RU-51123",
+        "employer": "Cảng tự động Hiệp Phước",
+        "valid_until": "2027-03-01"
+      },
+      "customs": {
+        "name": "Elena Petrova",
+        "items": [
+          {
+            "name": "Laptop",
+            "category": "Điện tử"
+          },
+          {
+            "name": "Áo khoác lông",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 1500
+      }
+    },
+    "scan": [
+      {
+        "item": "Laptop",
+        "reveal": "Thiết bị điện tử, có ổ cứng mã hóa"
+      },
+      {
+        "item": "Áo khoác lông",
+        "reveal": "Lông thú nhân tạo"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Kiêu ngạo, lạnh lùng, coi thường nhân viên, hay dọa khiếu nại",
+      "temper": "angry",
+      "true_story": "Điệp viên công nghiệp, dùng giấy phép nhập cảnh giả để đánh cắp bản thiết kế cảng tự động. Kẻ làm giả viết sai tên thành 'Petrovna'.",
+      "alibi": "Chuyên gia logistics sang tư vấn cho Cảng tự động Hiệp Phước",
+      "triggers": {
+        "if_asked_about_name": "Khinh khỉnh: 'Petrovna là cách gọi theo tên cha, các anh không hiểu văn hóa Nga à?'",
+        "if_threatened": "Đòi gặp lãnh sự, giọng bắt đầu run"
+      }
+    },
+    "lines": {
+      "greeting": "Nhanh lên. Tôi có cuộc họp quan trọng và không có thời gian cho thủ tục vớ vẩn.",
+      "mismatch": "Petrovna là cách gọi theo tên cha. Các anh không hiểu văn hóa Nga à?",
+      "threat": [
+        "Tôi sẽ khiếu nại anh lên cấp trên!",
+        "Tôi... tôi muốn gặp lãnh sự quán. Ngay bây giờ."
+      ]
+    },
+    "news": {
+      "ALLOW": "Bản thiết kế cảng tự động Hiệp Phước bị đánh cắp",
+      "ARREST": "Bắt giữ nữ điệp viên công nghiệp dùng giấy phép giả"
+    },
+    "fingerprint": {
+      "name": "Elena Petrova",
+      "record": "Nghi vấn gián điệp công nghiệp — đang bị theo dõi"
+    }
+  },
+  {
+    "id": "npc_012",
+    "day": 4,
+    "crime": null,
+    "avatar": {
+      "skin": "#e0ac69",
+      "hair": "shaved",
+      "hairColor": "#1b1b1b",
+      "clothes": "#e67e22",
+      "acc": []
+    },
+    "documents": {
+      "passport": {
+        "name": "Thích Tâm An",
+        "sex": "Nam",
+        "dob": "1955-03-03",
+        "id_number": "MK-90001",
+        "expiry_date": "2030-01-01",
+        "origin": "Tịnh Biên, Liên khu Mê Kông"
+      },
+      "entry_permit": {
+        "name": "Thích Tâm An",
+        "dob": "1955-03-03",
+        "id_number": "MK-90001",
+        "purpose": "Thăm thân",
+        "duration_days": 30
+      },
+      "customs": {
+        "name": "Thích Tâm An",
+        "items": [
+          {
+            "name": "Kinh sách",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Nhang trầm",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Thuốc nam",
+            "category": "Dược phẩm"
+          }
+        ],
+        "cash": 20
+      }
+    },
+    "scan": [
+      {
+        "item": "Kinh sách",
+        "reveal": "Giấy"
+      },
+      {
+        "item": "Nhang trầm",
+        "reveal": "Gỗ thơm"
+      },
+      {
+        "item": "Thuốc nam",
+        "reveal": "Thảo dược khô"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Nhà sư từ bi, điềm tĩnh tuyệt đối, nói nhỏ nhẹ, xưng 'bần tăng'",
+      "temper": "calm",
+      "true_story": "Đến chùa Vĩnh Nghiêm giảng pháp và thăm sư huynh đang bệnh. Thuốc nam là để chữa bệnh cho sư huynh. Không giấu gì.",
+      "alibi": "Thăm sư huynh đang bệnh ở chùa Vĩnh Nghiêm",
+      "triggers": {}
+    },
+    "lines": {
+      "greeting": "A Di Đà Phật. Bần tăng xin làm phiền thí chủ thanh tra.",
+      "luggage": "Kinh sách, nhang trầm và ít thuốc nam cho sư huynh đang bệnh, thí chủ cứ xem.",
+      "threat": [
+        "A Di Đà Phật. Thí chủ cứ làm theo phép nước, bần tăng không oán trách."
+      ]
+    }
+  },
+  {
+    "id": "npc_015",
+    "day": 4,
+    "crime": "CONTRABAND",
+    "crime_detail": "Buôn mật gấu và vảy tê tê giấu dưới đáy thùng khô mực",
+    "avatar": {
+      "skin": "#c68642",
+      "hair": "short",
+      "hairColor": "#3b2a1a",
+      "clothes": "#d35400",
+      "acc": [
+        "mustache"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Đoàn Văn Sáu",
+        "sex": "Nam",
+        "dob": "1972-12-12",
+        "id_number": "PQ-63636",
+        "expiry_date": "2029-09-09",
+        "origin": "Dương Đông, Đặc khu Phú Quốc"
+      },
+      "entry_permit": {
+        "name": "Đoàn Văn Sáu",
+        "dob": "1972-12-12",
+        "id_number": "PQ-63636",
+        "purpose": "Thăm thân",
+        "duration_days": 5
+      },
+      "customs": {
+        "name": "Đoàn Văn Sáu",
+        "items": [
+          {
+            "name": "Thùng đá khô mực",
+            "category": "Thực phẩm"
+          },
+          {
+            "name": "Nước mắm nhỉ",
+            "category": "Thực phẩm"
+          }
+        ],
+        "cash": 3000
+      }
+    },
+    "scan": [
+      {
+        "item": "Thùng đá khô mực",
+        "reveal": "Đáy thùng có ngăn bí mật: mật gấu và vảy tê tê",
+        "contraband": true
+      },
+      {
+        "item": "Nước mắm nhỉ",
+        "reveal": "Chất lỏng, 1 lít"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Lươn lẹo, xởi lởi, hay kể chuyện, gọi thanh tra là 'sếp', thích dúi tiền",
+      "temper": "calm",
+      "true_story": "Buôn mật gấu và vảy tê tê, giấu dưới ngăn bí mật ở đáy thùng khô mực",
+      "alibi": "Mang đặc sản quê lên biếu thằng con trai",
+      "triggers": {
+        "if_asked_about_cooler": "Mời sếp 'cầm mấy con mực về nhậu'",
+        "if_threatened": "Dúi $200 rồi nháy mắt"
+      }
+    },
+    "lines": {
+      "greeting": "Chào sếp! Đặc sản Phú Quốc nè, sếp có muốn vài con mực về nhậu không?",
+      "luggage": "Khô mực với nước mắm biếu thằng con thôi sếp ơi. Sếp cầm mấy con về nhậu nha!",
+      "threat": [
+        "Ấy ấy sếp, có gì từ từ nói.",
+        "Sếp... đây có chút $200 uống cà phê, sếp cho em qua nha?"
+      ],
+      "scanned": "Ơ... cái đó... chắc ai đó gửi nhờ em sếp ơi!"
+    },
+    "bribe": 200,
+    "news": {
+      "ALLOW": "Phát hiện đường dây buôn mật gấu, vảy tê tê từ Phú Quốc",
+      "ARREST": "Thu giữ mật gấu, vảy tê tê giấu trong thùng khô mực"
+    },
+    "fingerprint": {
+      "name": "Đoàn Văn Sáu",
+      "record": "Tiền án: buôn bán động vật hoang dã (2019)"
+    }
+  },
+  {
+    "id": "npc_013",
+    "day": 5,
+    "crime": "CONTRABAND",
+    "crime_detail": "Giấu linh kiện súng in 3D trong loa bluetooth",
+    "avatar": {
+      "skin": "#f1c27d",
+      "hair": "mohawk",
+      "hairColor": "#00e5ff",
+      "clothes": "#111111",
+      "acc": [
+        "implant"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Mai Thanh Trúc",
+        "sex": "Nữ",
+        "dob": "2001-10-10",
+        "id_number": "NS-13579",
+        "expiry_date": "2027-12-12",
+        "origin": "Quận 4 Ngầm, Neo-Saigon"
+      },
+      "entry_permit": {
+        "name": "Mai Thanh Trúc",
+        "dob": "2001-10-10",
+        "id_number": "NS-13579",
+        "purpose": "Du lịch",
+        "duration_days": 3
+      },
+      "customs": {
+        "name": "Mai Thanh Trúc",
+        "items": [
+          {
+            "name": "Loa bluetooth",
+            "category": "Điện tử"
+          },
+          {
+            "name": "Áo khoác da",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 90
+      }
+    },
+    "scan": [
+      {
+        "item": "Loa bluetooth",
+        "reveal": "Linh kiện súng in 3D tháo rời bên trong vỏ loa",
+        "contraband": true
+      },
+      {
+        "item": "Áo khoác da",
+        "reveal": "Da thuộc"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Nổi loạn, cá tính, hay cáu, ghét chính quyền, nói tiếng lóng",
+      "temper": "angry",
+      "true_story": "Hacker trong nhóm kháng chiến ngầm, vận chuyển linh kiện súng in 3D giấu trong loa bluetooth",
+      "alibi": "Đi diễn DJ ở bar Quận 1",
+      "triggers": {
+        "if_asked_about_speaker": "Bảo là loa để đi diễn, cấm đụng vào vì 'đắt hơn lương thanh tra cả năm'",
+        "if_threatened": "Chửi thề rồi im lặng, liếc nhìn cửa thoát"
+      }
+    },
+    "lines": {
+      "greeting": "Ờ. Giấy tờ đây. Khỏi hỏi han lằng nhằng nhé.",
+      "luggage": "Loa đi diễn. Đừng có đụng vào, nó đắt hơn lương ông cả năm đấy.",
+      "threat": [
+        "Lại bài cũ. Mấy người chỉ giỏi bắt nạt dân thường.",
+        "...Chết tiệt."
+      ],
+      "scanned": "...Mấy người sẽ không hiểu đâu. Thành phố này mục nát rồi."
+    },
+    "news": {
+      "ALLOW": "Nhóm kháng chiến ngầm tấn công kho cảng bằng súng in 3D",
+      "ARREST": "Bắt nữ DJ giấu linh kiện súng in 3D trong loa"
+    },
+    "fingerprint": {
+      "name": "Mai Thanh Trúc",
+      "record": "Từng bị tạm giữ vì gây rối trật tự (2025)"
+    }
+  },
+  {
+    "id": "npc_016",
+    "day": 5,
+    "crime": null,
+    "avatar": {
+      "skin": "#ffdbac",
+      "hair": "bun",
+      "hairColor": "#1b1b1b",
+      "clothes": "#ecf0f1",
+      "acc": [
+        "glasses"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Sarah Kim",
+        "sex": "Nữ",
+        "dob": "1984-03-21",
+        "id_number": "KR-10203",
+        "expiry_date": "2031-03-21",
+        "origin": "Gangnam, Seoul Mới"
+      },
+      "entry_permit": {
+        "name": "Sarah Kim",
+        "dob": "1984-03-21",
+        "id_number": "KR-10203",
+        "purpose": "Công tác",
+        "duration_days": 14
+      },
+      "work_permit": {
+        "name": "Sarah Kim",
+        "id_number": "KR-10203",
+        "employer": "Bệnh viện Chợ Rẫy 2",
+        "valid_until": "2027-06-30"
+      },
+      "customs": {
+        "name": "Sarah Kim",
+        "items": [
+          {
+            "name": "Vắc-xin thử nghiệm",
+            "category": "Dược phẩm"
+          },
+          {
+            "name": "Máy tính bảng",
+            "category": "Điện tử"
+          },
+          {
+            "name": "Quần áo",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 700
+      }
+    },
+    "scan": [
+      {
+        "item": "Vắc-xin thử nghiệm",
+        "reveal": "Hộp lạnh, 20 lọ có nhãn bệnh viện"
+      },
+      {
+        "item": "Máy tính bảng",
+        "reveal": "Thiết bị điện tử thông thường"
+      },
+      {
+        "item": "Quần áo",
+        "reveal": "Vải sợi"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Bác sĩ chuyên nghiệp, bận rộn, nói nhanh, hơi sốt ruột vì sắp có ca trực",
+      "temper": "calm",
+      "true_story": "Đến hỗ trợ chiến dịch tiêm vắc-xin cúm mới ở Bệnh viện Chợ Rẫy 2; vắc-xin có giấy chứng nhận. Không giấu gì.",
+      "alibi": "Hỗ trợ chiến dịch tiêm vắc-xin ở Chợ Rẫy 2",
+      "triggers": {}
+    },
+    "lines": {
+      "greeting": "Chào thanh tra. Làm ơn nhanh giúp tôi, 2 tiếng nữa tôi có ca trực.",
+      "luggage": "Vắc-xin cúm cho chiến dịch tiêm chủng, phải giữ lạnh, làm ơn đừng mở hộp lạnh.",
+      "threat": [
+        "Tôi là bác sĩ, thanh tra cứ gọi Chợ Rẫy 2 mà xác minh!"
+      ]
+    },
+    "news": {
+      "DENY": "Chiến dịch tiêm vắc-xin cúm ở Chợ Rẫy 2 thiếu bác sĩ trầm trọng",
+      "ARREST": "Bác sĩ Hàn Quốc bị bắt oan, đại sứ quán gửi công hàm phản đối"
+    }
+  },
+  {
+    "id": "npc_017",
+    "day": 5,
+    "crime": "WANTED",
+    "crime_detail": "Đối tượng truy nã Châu Bá Long dùng danh tính giả",
+    "wanted": {
+      "name": "Châu Bá Long",
+      "id_number": "TB-77777",
+      "charge": "Cướp ngân hàng NeoBank, giết người",
+      "note": "Có thể dùng danh tính giả. Nhận diện qua ảnh chân dung."
+    },
+    "avatar": {
+      "skin": "#e0ac69",
+      "hair": "short",
+      "hairColor": "#1b1b1b",
+      "clothes": "#5d4037",
+      "acc": [
+        "glasses",
+        "mustache"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Lý Văn Thành",
+        "sex": "Nam",
+        "dob": "1980-01-20",
+        "id_number": "HN-24601",
+        "expiry_date": "2028-08-08",
+        "origin": "Đống Đa, Hà Nội Tự Trị"
+      },
+      "entry_permit": {
+        "name": "Lý Văn Thành",
+        "dob": "1980-01-20",
+        "id_number": "HN-24601",
+        "purpose": "Du lịch",
+        "duration_days": 7
+      },
+      "customs": {
+        "name": "Lý Văn Thành",
+        "items": [
+          {
+            "name": "Quần áo",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Máy ảnh",
+            "category": "Điện tử"
+          }
+        ],
+        "cash": 400
+      }
+    },
+    "scan": [
+      {
+        "item": "Quần áo",
+        "reveal": "Vải sợi"
+      },
+      {
+        "item": "Máy ảnh",
+        "reveal": "Thiết bị điện tử thông thường"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Điềm tĩnh, lễ phép quá mức, cười nhiều nhưng mắt không cười",
+      "temper": "calm",
+      "true_story": "Thực ra là Châu Bá Long, kẻ cướp ngân hàng NeoBank đang bị truy nã, dùng danh tính giả 'Lý Văn Thành' để trốn khỏi thành phố",
+      "alibi": "Nhân viên văn phòng đi du lịch chụp ảnh",
+      "triggers": {
+        "if_asked_about_Chau_Ba_Long": "Hơi khựng lại một nhịp rồi cười: 'Ai cơ? Tôi không quen'",
+        "if_threatened": "Mắt liếc nhìn lối thoát, giọng vẫn cố bình tĩnh"
+      }
+    },
+    "lines": {
+      "greeting": "Chào thanh tra ạ. Thời tiết hôm nay đẹp quá nhỉ. Giấy tờ của tôi đây ạ.",
+      "threat": [
+        "Thanh tra nhầm người rồi ạ. Tôi chỉ là nhân viên văn phòng thôi.",
+        "...Ai cơ? Châu Bá Long? Tôi không quen ai tên đó cả."
+      ]
+    },
+    "news": {
+      "ALLOW": "Kẻ cướp ngân hàng NeoBank Châu Bá Long đã trốn thoát ra nước ngoài",
+      "ARREST": "Bắt được Châu Bá Long — kẻ cướp ngân hàng NeoBank dùng danh tính giả"
+    },
+    "fingerprint": {
+      "name": "Châu Bá Long",
+      "record": "TRUY NÃ ĐẶC BIỆT — cướp ngân hàng NeoBank, giết người"
+    }
+  },
+  {
+    "id": "npc_101",
+    "follow": {
+      "after": "npc_001",
+      "decisions": [
+        "ALLOW"
+      ],
+      "delay": 2
+    },
+    "crime": "CONTRABAND",
+    "crime_detail": "Tái phạm: giấu 40 ống thuốc biến đổi gien trong thùng dụng cụ",
+    "bribe": 250,
+    "avatar": {
+      "skin": "#ffdbac",
+      "hair": "short",
+      "hairColor": "#6b4423",
+      "clothes": "#4a5a3a",
+      "acc": [
+        "beard"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Alexei Morozov",
+        "sex": "Nam",
+        "dob": "1979-02-11",
+        "id_number": "KP-98214",
+        "expiry_date": "2027-05-12",
+        "origin": "Quận Tân Bình, Neo-Saigon"
+      },
+      "entry_permit": {
+        "name": "Alexei Morozov",
+        "dob": "1979-02-11",
+        "id_number": "KP-98214",
+        "purpose": "Du lịch",
+        "duration_days": 5
+      },
+      "customs": {
+        "name": "Alexei Morozov",
+        "items": [
+          {
+            "name": "Quần áo",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Thùng dụng cụ cỡ lớn",
+            "category": "Không rõ"
+          }
+        ],
+        "cash": 900
+      }
+    },
+    "scan": [
+      {
+        "item": "Quần áo",
+        "reveal": "Vải sợi"
+      },
+      {
+        "item": "Thùng dụng cụ cỡ lớn",
+        "reveal": "40 ống tiêm thuốc biến đổi gien xếp lớp",
+        "contraband": true
+      }
+    ],
+    "ai_persona": {
+      "personality": "Lần này tự tin hơn hẳn, thân mật như người quen, nghĩ thanh tra đã là \"người nhà\"",
+      "temper": "calm",
+      "true_story": "Lần trước được cho qua trót lọt nên lần này buôn gấp bốn lần, giấu 40 ống thuốc biến đổi gien trong thùng dụng cụ. Con gái đã được chữa nhưng giờ ham tiền.",
+      "alibi": "Lại đi sửa ống nước, công trình lớn nên mang thùng đồ nghề to",
+      "triggers": {
+        "if_threatened": "Ngạc nhiên vì nghĩ thanh tra là đồng bọn, dúi phong bì $250",
+        "if_asked_about_box": "Cười: \"Như lần trước thôi mà thanh tra\""
+      }
+    },
+    "lines": {
+      "greeting": "Lại là tôi đây, thanh tra! Lần trước... cảm ơn nhé. Hôm nay cũng nhanh gọn như vậy chứ?",
+      "luggage": "Như lần trước thôi mà thanh tra, đồ nghề cả.",
+      "threat": [
+        "Ơ kìa, mình là người quen mà thanh tra...",
+        "Thôi thì... $250 đây, coi như phí \"người quen\" nhé?"
+      ],
+      "scanned": "Lần trước anh đâu có soi! Sao giờ lại làm khó tôi?!"
+    },
+    "news": {
+      "ALLOW": "Đường dây thuốc biến đổi gien mở rộng — 3 người tử vong ở Quận Tân Bình",
+      "ARREST": "Bắt kẻ buôn thuốc biến đổi gien tái phạm ngay tại cửa khẩu",
+      "DENY": "Kẻ buôn lậu tái phạm bị trả về, lô thuốc biến mất bí ẩn"
+    }
+  },
+  {
+    "id": "npc_102",
+    "follow": {
+      "after": "npc_001",
+      "decisions": [
+        "ARREST"
+      ],
+      "delay": 1
+    },
+    "crime": null,
+    "avatar": {
+      "skin": "#ffdbac",
+      "hair": "long",
+      "hairColor": "#e3c16f",
+      "clothes": "#5d6d7e",
+      "acc": []
+    },
+    "documents": {
+      "passport": {
+        "name": "Irina Morozova",
+        "sex": "Nữ",
+        "dob": "1983-09-30",
+        "id_number": "KP-98215",
+        "expiry_date": "2028-02-14",
+        "origin": "Quận Tân Bình, Neo-Saigon"
+      },
+      "entry_permit": {
+        "name": "Irina Morozova",
+        "dob": "1983-09-30",
+        "id_number": "KP-98215",
+        "purpose": "Thăm thân",
+        "duration_days": 3
+      },
+      "customs": {
+        "name": "Irina Morozova",
+        "items": [
+          {
+            "name": "Hồ sơ bệnh án của con gái",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Áo ấm cho chồng",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 60
+      }
+    },
+    "scan": [
+      {
+        "item": "Hồ sơ bệnh án của con gái",
+        "reveal": "Giấy tờ"
+      },
+      {
+        "item": "Áo ấm cho chồng",
+        "reveal": "Vải len"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Mệt mỏi, mắt đỏ hoe, nói nhỏ, cố giữ bình tĩnh nhưng dễ vỡ òa",
+      "temper": "pleading",
+      "true_story": "Vợ của Alexei Morozov — người bị bắt hôm qua vì buôn thuốc biến đổi gien. Vào thăm chồng ở trại tạm giam và mang hồ sơ bệnh án của con gái Sasha để xin giảm án. Không giấu gì, không biết gì về việc buôn lậu.",
+      "alibi": "Vào thăm chồng đang bị tạm giam",
+      "triggers": {
+        "if_asked_about_husband": "Bật khóc, nói chồng chỉ vì muốn cứu con gái",
+        "if_threatened": "Run rẩy nhưng vẫn kể thật mọi chuyện"
+      }
+    },
+    "lines": {
+      "greeting": "Thanh tra... hôm qua anh là người bắt chồng tôi phải không? Tôi chỉ xin vào thăm anh ấy thôi.",
+      "luggage": "Hồ sơ bệnh án của bé Sasha và cái áo ấm cho chồng tôi. Anh xem đi.",
+      "threat": [
+        "Tôi không biết gì về chuyện buôn bán đó cả... tôi chỉ muốn con tôi được sống."
+      ]
+    },
+    "news": {
+      "ALLOW": "Vợ kẻ buôn lậu bán nhà lấy tiền chữa bệnh cho con gái",
+      "DENY": "Người vợ ngất xỉu trước cửa khẩu khi bị từ chối vào thăm chồng",
+      "ARREST": "Dư luận phẫn nộ: bắt cả vợ của người đang bị tạm giam"
+    }
+  },
+  {
+    "id": "npc_103",
+    "follow": {
+      "after": "npc_002",
+      "decisions": [
+        "DENY",
+        "ARREST"
+      ],
+      "delay": 1
+    },
+    "crime": null,
+    "avatar": {
+      "skin": "#c68642",
+      "hair": "short",
+      "hairColor": "#1b1b1b",
+      "clothes": "#7b241c",
+      "acc": []
+    },
+    "documents": {
+      "passport": {
+        "name": "Nguyễn Văn Hai",
+        "sex": "Nam",
+        "dob": "1975-04-02",
+        "id_number": "MK-20488",
+        "expiry_date": "2029-11-11",
+        "origin": "Cái Răng, Liên khu Mê Kông"
+      },
+      "entry_permit": {
+        "name": "Nguyễn Văn Hai",
+        "dob": "1975-04-02",
+        "id_number": "MK-20488",
+        "purpose": "Thăm thân",
+        "duration_days": 5
+      },
+      "customs": {
+        "name": "Nguyễn Văn Hai",
+        "items": [
+          {
+            "name": "Đơn khiếu nại gửi Bộ An ninh",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Quần áo",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 150
+      }
+    },
+    "scan": [
+      {
+        "item": "Đơn khiếu nại gửi Bộ An ninh",
+        "reveal": "Giấy tờ"
+      },
+      {
+        "item": "Quần áo",
+        "reveal": "Vải sợi"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Giận dữ, nói thẳng, bảo vệ mẹ đến cùng nhưng vẫn giữ lễ phép tối thiểu",
+      "temper": "angry",
+      "true_story": "Con trai bà Nguyễn Thị Bảy — cụ bà hôm trước bị thanh tra này làm khó. Mang đơn khiếu nại lên Bộ An ninh và vào thăm vợ vừa sinh con. Giấy tờ hoàn toàn hợp lệ, không giấu gì.",
+      "alibi": "Vào thăm vợ vừa sinh con, tiện nộp đơn khiếu nại",
+      "triggers": {
+        "if_asked_about_mother": "Gắt lên: mẹ tôi 78 tuổi, chỉ mang áo len mà các anh cũng làm khó",
+        "if_threatened": "Thách thức: \"Anh cứ bắt đi, tôi sẽ đưa lên báo\""
+      }
+    },
+    "lines": {
+      "greeting": "Anh là người đã làm khó mẹ tôi hôm trước phải không? Mẹ tôi 78 tuổi rồi đấy!",
+      "luggage": "Đơn khiếu nại gửi Bộ An ninh, có tên quầy 7 của anh trong đó. Anh muốn đọc không?",
+      "threat": [
+        "Anh cứ bắt đi! Tôi sẽ đưa chuyện này lên báo!"
+      ]
+    },
+    "news": {
+      "ALLOW": "Đơn khiếu nại về trạm kiểm soát Neo-Saigon được Bộ An ninh thụ lý",
+      "DENY": "Gia đình cụ bà 78 tuổi tiếp tục bị gây khó dễ tại cửa khẩu",
+      "ARREST": "Bắt người đi khiếu nại — trạm kiểm soát bị điều tra lạm quyền"
+    }
+  },
+  {
+    "id": "npc_104",
+    "follow": {
+      "after": "npc_010",
+      "decisions": [
+        "DENY",
+        "ARREST"
+      ],
+      "delay": 2
+    },
+    "crime": "FORGERY",
+    "crime_detail": "Giấy phép lao động làm giả (sai số hộ chiếu)",
+    "fingerprint": {
+      "name": "Bùi Quốc Tuấn",
+      "record": "Bị từ chối nhập cảnh 2 ngày trước (không có giấy phép lao động)"
+    },
+    "avatar": {
+      "skin": "#8d5524",
+      "hair": "short",
+      "hairColor": "#1b1b1b",
+      "clothes": "#2980b9",
+      "acc": []
+    },
+    "documents": {
+      "passport": {
+        "name": "Bùi Quốc Tuấn",
+        "sex": "Nam",
+        "dob": "1990-05-05",
+        "id_number": "MK-40213",
+        "expiry_date": "2028-05-05",
+        "origin": "Châu Đốc, Liên khu Mê Kông"
+      },
+      "entry_permit": {
+        "name": "Bùi Quốc Tuấn",
+        "dob": "1990-05-05",
+        "id_number": "MK-40213",
+        "purpose": "Lao động",
+        "duration_days": 120
+      },
+      "customs": {
+        "name": "Bùi Quốc Tuấn",
+        "items": [
+          {
+            "name": "Quần áo",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Mũ bảo hộ",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Cơm nắm",
+            "category": "Thực phẩm"
+          }
+        ],
+        "cash": 50
+      },
+      "work_permit": {
+        "name": "Bùi Quốc Tuấn",
+        "id_number": "MK-40218",
+        "employer": "Công ty Xây dựng Mặt Trời",
+        "valid_until": "2027-04-30"
+      }
+    },
+    "scan": [
+      {
+        "item": "Quần áo",
+        "reveal": "Vải sợi"
+      },
+      {
+        "item": "Mũ bảo hộ",
+        "reveal": "Nhựa cứng"
+      },
+      {
+        "item": "Cơm nắm",
+        "reveal": "Thực phẩm"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Tuyệt vọng, gầy rộc đi, nói lí nhí, né ánh mắt",
+      "temper": "nervous",
+      "true_story": "Bị từ chối nhập cảnh 2 ngày trước vì không có giấy phép lao động. Vợ con ở quê đói, đã vay nặng lãi $300 mua giấy phép lao động giả ở chợ đen. Kẻ làm giả ghi sai số hộ chiếu.",
+      "alibi": "Lần này đã có giấy phép lao động đàng hoàng rồi",
+      "triggers": {
+        "if_asked_about_work_permit": "Lắp bắp nói chủ thầu mới làm cho",
+        "if_threatened": "Van xin, kể chuyện vợ con đói và khoản vay nặng lãi"
+      }
+    },
+    "lines": {
+      "greeting": "Dạ... thanh tra, tui lại tới đây. Lần này tui có giấy phép lao động rồi nè.",
+      "mismatch": "D-dạ chắc... chắc chủ thầu ghi lộn số. Tui hổng biết chữ nhiều...",
+      "threat": [
+        "Thanh tra ơi... vợ con tui ở nhà đói lắm, tui vay nặng lãi mới có cái giấy này..."
+      ]
+    },
+    "news": {
+      "ARREST": "Nông dân miền Tây bị bắt vì giấy phép giả — vợ con bơ vơ ở quê",
+      "ALLOW": "Lao động dùng giấy phép giả gặp tai nạn tại công trình, không được bồi thường",
+      "DENY": "Người nông dân bị trả về lần hai, ngồi bệt ở bến xe Miền Tây"
+    }
+  },
+  {
+    "id": "npc_105",
+    "follow": {
+      "after": "npc_005",
+      "decisions": [
+        "ALLOW",
+        "DENY"
+      ],
+      "delay": 1
+    },
+    "crime": "CONTRABAND",
+    "crime_detail": "Giấu dao găm và súng điện trong hộp đàn guitar",
+    "fingerprint": {
+      "name": "Lò Văn Búa",
+      "record": "Tiền án: cố ý gây thương tích (2022). Đàn em của \"Rắn\" Vũ Đức Thắng"
+    },
+    "avatar": {
+      "skin": "#8d5524",
+      "hair": "shaved",
+      "hairColor": "#1b1b1b",
+      "clothes": "#212f3c",
+      "acc": [
+        "scar",
+        "earring"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Lò Văn Búa",
+        "sex": "Nam",
+        "dob": "1995-08-15",
+        "id_number": "HN-31337",
+        "expiry_date": "2028-01-20",
+        "origin": "Long Biên, Hà Nội Tự Trị"
+      },
+      "entry_permit": {
+        "name": "Lò Văn Búa",
+        "dob": "1995-08-15",
+        "id_number": "HN-31337",
+        "purpose": "Du lịch",
+        "duration_days": 4
+      },
+      "customs": {
+        "name": "Lò Văn Búa",
+        "items": [
+          {
+            "name": "Hộp đàn guitar",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Áo khoác da",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 500
+      }
+    },
+    "scan": [
+      {
+        "item": "Hộp đàn guitar",
+        "reveal": "Không có đàn — 2 dao găm và 1 súng điện",
+        "contraband": true
+      },
+      {
+        "item": "Áo khoác da",
+        "reveal": "Da thuộc"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Côn đồ, nhai kẹo cao su, nói giọng đe dọa, cười khẩy",
+      "temper": "angry",
+      "true_story": "Đàn em của \"Rắn\" Vũ Đức Thắng, được sai mang vũ khí giấu trong hộp đàn vào thành phố, tiện \"hỏi thăm\" viên thanh tra quầy 7.",
+      "alibi": "Nhạc công đi diễn ở quán bar",
+      "triggers": {
+        "if_asked_about_guitar": "Cười khẩy: \"Đàn thôi, muốn nghe tôi đánh một bài không?\"",
+        "if_threatened": "Ghé sát kính: \"Anh Rắn gửi lời hỏi thăm gia đình thanh tra\""
+      }
+    },
+    "lines": {
+      "greeting": "Thanh tra quầy 7 hả? Anh Rắn gửi lời hỏi thăm đấy. Hehe.",
+      "luggage": "Đàn guitar. Muốn nghe tôi đánh một bài không?",
+      "threat": [
+        "Bình tĩnh. Nhà thanh tra ở Phường 7 đúng không? Bé Na học lớp mấy rồi?"
+      ],
+      "scanned": "...Coi như anh may mắn hôm nay."
+    },
+    "news": {
+      "ALLOW": "Hỗn chiến giữa các băng nhóm đòi nợ ở Quận 4, nhiều người bị thương bằng dao",
+      "ARREST": "Thu giữ dao găm, súng điện giấu trong hộp đàn của đàn em \"Rắn\"",
+      "DENY": "Đàn em băng \"Rắn\" bị chặn ở cửa khẩu, quay về trong giận dữ"
+    }
+  },
+  {
+    "id": "npc_106",
+    "follow": {
+      "after": "npc_008",
+      "decisions": [
+        "ALLOW"
+      ],
+      "delay": 2
+    },
+    "crime": "CONTRABAND",
+    "crime_detail": "Tái phạm: giấu 120 vi mạch thần kinh lậu trong vali đôi đáy",
+    "bribe": 300,
+    "avatar": {
+      "skin": "#ffdbac",
+      "hair": "long",
+      "hairColor": "#ff2bd6",
+      "clothes": "#c0392b",
+      "acc": [
+        "earring"
+      ]
+    },
+    "documents": {
+      "passport": {
+        "name": "Đặng Mỹ Linh",
+        "sex": "Nữ",
+        "dob": "1996-02-14",
+        "id_number": "NS-24680",
+        "expiry_date": "2029-07-07",
+        "origin": "Quận 1, Neo-Saigon"
+      },
+      "entry_permit": {
+        "name": "Đặng Mỹ Linh",
+        "dob": "1996-02-14",
+        "id_number": "NS-24680",
+        "purpose": "Du lịch",
+        "duration_days": 3
+      },
+      "customs": {
+        "name": "Đặng Mỹ Linh",
+        "items": [
+          {
+            "name": "Vali đôi đáy",
+            "category": "Cá nhân"
+          },
+          {
+            "name": "Váy dạ hội",
+            "category": "Cá nhân"
+          }
+        ],
+        "cash": 2400
+      }
+    },
+    "scan": [
+      {
+        "item": "Vali đôi đáy",
+        "reveal": "Ngăn đáy giả chứa 120 vi mạch thần kinh lậu",
+        "contraband": true
+      },
+      {
+        "item": "Váy dạ hội",
+        "reveal": "Vải sợi"
+      }
+    ],
+    "ai_persona": {
+      "personality": "Quyến rũ, tự tin thái quá vì lần trước trót lọt, coi thanh tra như \"bạn thân\"",
+      "temper": "calm",
+      "true_story": "Lần trước được cho qua nên băng đảng giao gấp ba hàng: 120 vi mạch thần kinh lậu trong vali đôi đáy. Sẵn sàng chi $300 cho thanh tra.",
+      "alibi": "Lại về chụp ảnh thời trang",
+      "triggers": {
+        "if_threatened": "Dúi phong bì $300, nháy mắt: \"Như lần trước nhé anh\""
+      }
+    },
+    "lines": {
+      "greeting": "Anh thanh tra đẹp trai, lại gặp nhau rồi~ Em nhớ anh lắm đó.",
+      "luggage": "Vali thời trang thôi mà anh, như lần trước đó~",
+      "threat": [
+        "Anh lại giận em à?",
+        "Thôi mà anh... $300, như lần trước nhé?"
+      ],
+      "scanned": "Anh... anh dám?! Anh có biết em làm cho ai không?"
+    },
+    "news": {
+      "ALLOW": "Chợ đen vi mạch thần kinh bùng nổ, thanh thiếu niên nhập viện vì cấy chip lậu",
+      "ARREST": "Bắt \"người mẫu\" vận chuyển 120 vi mạch lậu",
+      "DENY": "Người mẫu khả nghi bị trả về, vali đôi đáy chưa được mở"
+    }
+  }
+]

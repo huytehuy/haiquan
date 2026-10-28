@@ -1,0 +1,14 @@
+{
+  "name": "tram-kiem-soat-neo-saigon",
+  "version": "1.0.0",
+  "description": "Game mô phỏng nhân viên hải quan cửa khẩu — hỏi vặn nhân vật AI (Groq) để tìm kẻ gian.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

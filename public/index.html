@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f14">
+  <title>Trạm Kiểm Soát Neo-Saigon</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230b0f14'/><rect x='6' y='9' width='20' height='14' rx='2' fill='none' stroke='%23f2b84b' stroke-width='3'/><rect x='10' y='13' width='6' height='6' fill='%2300e5ff'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=Noto+Serif:wght@700;900&family=Roboto+Mono:wght@400;600&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Màn hình tiêu đề -->
+    <section id="screen-title" class="screen active">
+      <div class="title-wrap">
+        <div class="title-avatar" id="title-avatar"></div>
+        <h1 class="logo">TRẠM KIỂM SOÁT<span>NEO-SAIGON</span></h1>
+        <p class="tagline">Soi giấy tờ. Hỏi vặn. Đóng dấu.<br>Đừng để kẻ gian lọt qua cửa khẩu.</p>
+        <div class="ai-status" id="ai-status">Đang kết nối tổng đài AI…</div>
+        <div class="title-actions">
+          <button class="btn primary" id="btn-new">Nhận ca làm việc</button>
+          <button class="btn ghost" id="btn-continue" hidden>Tiếp tục</button>
+          <button class="btn ghost" id="btn-howto">Cách chơi</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Công văn đầu ngày -->
+    <section id="screen-memo" class="screen">
+      <div class="scroll-area"><div id="memo-content"></div></div>
+      <div class="bottom-actions"><button class="btn primary" id="btn-open">Mở cửa trạm ▶</button></div>
+    </section>
+
+    <!-- Quầy kiểm soát -->
+    <section id="screen-booth" class="screen">
+      <header class="hud">
+        <div class="hud-item"><b id="hud-day">Ngày 1</b><small id="hud-date"></small></div>
+        <div class="hud-item"><small>Giờ</small><b id="hud-clock">08:00</b></div>
+        <div class="hud-item"><small>Khách</small><b id="hud-visitor">1/6</b></div>
+        <div class="hud-item"><small>Ví</small><b id="hud-money">$0</b></div>
+        <div class="hud-item"><small>Lỗi</small><b id="hud-mistakes">0/3</b></div>
+        <button class="icon-btn" id="btn-mute" aria-label="Bật/tắt âm thanh">🔊</button>
+      </header>
+
+      <div class="camera" id="camera">
+        <div class="cam-label">CAM-01 · QUẦY 7 <span class="rec">● REC</span></div>
+        <div class="queue" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="npc-wrap">
+          <div class="npc" id="npc"></div>
+          <div class="nameplate" id="nameplate"></div>
+        </div>
+        <div class="speech" id="speech">
+          <div class="speech-q" id="speech-q"></div>
+          <div class="speech-a" id="speech-a"></div>
+        </div>
+        <div class="alarm-light" id="alarm-light"></div>
+        <div class="streak" id="streak" hidden></div>
+        <div class="polygraph" id="polygraph" hidden>
+          <div class="pg-head"><span>NHỊP TIM</span><b id="pg-bpm">--</b></div>
+          <div class="pg-wave" id="pg-wave"></div>
+          <div class="pg-label" id="pg-label">Chờ câu trả lời…</div>
+        </div>
+        <div class="bribe" id="bribe" hidden>
+          <div class="envelope">✉️ <b id="bribe-amount">$100</b><small>phong bì dúi qua khe kính</small></div>
+          <div class="bribe-actions">
+            <button class="btn bribe-take" id="bribe-take">Nhận</button>
+            <button class="btn bribe-refuse" id="bribe-refuse">Từ chối</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="desk">
+        <div class="desk-bar">
+          <nav class="tabs" id="tabs" role="tablist"></nav>
+          <button class="tool-btn" id="btn-print" title="Tra vân tay trong cơ sở dữ liệu">🖐 <span id="print-left">1</span></button>
+          <button class="tool-btn" id="btn-scan" title="Soi hành lý bằng X-quang">🩻 <span id="scan-left">2</span></button>
+        </div>
+        <div class="doc-view" id="doc-view"></div>
+        <div class="stamp-layer" id="stamp-layer"></div>
+      </div>
+
+      <div class="controls">
+        <div class="chips" id="chips"></div>
+        <form class="ask" id="ask-form" autocomplete="off">
+          <input id="ask-input" maxlength="150" placeholder="Gõ câu hỏi vặn khách…" enterkeyhint="send">
+          <button class="btn send" id="ask-send" type="submit">Hỏi <span id="q-left">2/2</span></button>
+        </form>
+        <div class="verdicts">
+          <button class="btn v-allow" data-v="ALLOW">CHO QUA<small>ALLOW</small></button>
+          <button class="btn v-deny" data-v="DENY">TỪ CHỐI<small>DENY</small></button>
+          <button class="btn v-arrest" data-v="ARREST">BẮT GIỮ<small>ARREST</small></button>
+        </div>
+      </div>
+
+      <div class="sheet" id="result-sheet" hidden></div>
+    </section>
+
+    <!-- Tổng kết ngày -->
+    <section id="screen-summary" class="screen">
+      <div class="scroll-area"><div id="summary-content"></div></div>
+      <div class="bottom-actions">
+        <div class="night-balance" id="night-balance"></div>
+        <button class="btn primary" id="btn-next-day">Đi ngủ ▶</button>
+      </div>
+    </section>
+
+    <!-- Kết thúc -->
+    <section id="screen-end" class="screen">
+      <div class="scroll-area"><div id="end-content"></div></div>
+      <div class="bottom-actions"><button class="btn primary" id="btn-restart">Chơi lại</button></div>
+    </section>
+
+    <div class="modal" id="modal" hidden>
+      <div class="modal-card">
+        <button class="modal-close" id="modal-close" aria-label="Đóng">✕</button>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

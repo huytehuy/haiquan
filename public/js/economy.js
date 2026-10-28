@@ -91,10 +91,11 @@ export function applyNight(family, paid, home = {}) {
 
 // ---------------- Cửa hàng ----------------
 export const SHOP = [
-  { key: 'scan', label: 'Máy soi đời mới', desc: '+1 lượt soi X-quang mỗi ngày', price: 80, max: 2 },
+  // tool: chỉ bán khi công cụ đó đã được mở khóa (xem UNLOCK_STEPS trong rules.js)
+  { key: 'scan', label: 'Máy soi đời mới', desc: '+1 lượt soi X-quang mỗi ngày', price: 80, max: 2, tool: 'scan' },
   { key: 'question', label: 'Sổ tay thẩm vấn', desc: '+1 câu hỏi cho mỗi khách', price: 60, max: 1 },
   { key: 'polygraph', label: 'Máy phát hiện nói dối', desc: 'Đo nhịp tim sau mỗi câu trả lời', price: 120, max: 1 },
-  { key: 'fingerprint', label: 'Đầu đọc vân tay thứ hai', desc: '+1 lượt tra vân tay mỗi ngày', price: 70, max: 2 },
+  { key: 'fingerprint', label: 'Đầu đọc vân tay thứ hai', desc: '+1 lượt tra vân tay mỗi ngày', price: 70, max: 2, tool: 'print' },
   { key: 'comparator', label: 'Máy đối chiếu giấy tờ', desc: 'Tự tô đỏ ô thông tin lệch nhau / hết hạn', price: 150, max: 1 },
   { key: 'coffee', label: 'Máy pha cà phê', desc: `Ca làm dài thêm ${COFFEE_MINUTES} phút`, price: 70, max: 1 },
   { key: 'lawyer', label: 'Thuê luật sư', desc: 'Xóa 1 cảnh cáo (dùng ngay)', price: 100, consumable: true },

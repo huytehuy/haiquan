@@ -25,6 +25,9 @@ export function unlocksFor(day) {
   return { docs, tools, rules: UNLOCK_STEPS[day].rules, note: UNLOCK_STEPS[day].note || '' };
 }
 
+/** Ngày công cụ được mở khóa (scan, print, interrogate). */
+export const toolUnlockDay = (tool) => Number(Object.keys(UNLOCK_STEPS).find((d) => UNLOCK_STEPS[d].tools.includes(tool)));
+
 // Manh mối về trùm Hắc Long — khai thác trong Phòng thẩm vấn
 export const CLUES = [
   'Trùm Hắc Long luôn đi bằng hộ chiếu cấp tại Tân Dubai.',

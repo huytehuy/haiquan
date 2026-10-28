@@ -602,6 +602,8 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .opt.locked { opacity: .7; cursor: default; }
 .shop-item .btn { padding: 8px 12px; font-size: 13px; background: #1f6feb; color: #fff; white-space: nowrap; }
 .shop-item.owned .btn { background: #2ea04355; }
+.shop-item.locked { opacity: .55; }
+.shop-item.locked .btn { background: #3a3f47; font-size: 12px; }
 .audit { border: 1px solid #da363366; background: #2a1212; border-radius: 10px; padding: 10px 12px; font-size: 14px; line-height: 1.5; }
 .audit.clean { border-color: #2ea04366; background: #10251a; }
 .night-balance { display: flex; justify-content: space-between; font-family: var(--mono); margin-bottom: 8px; font-size: 14px; }

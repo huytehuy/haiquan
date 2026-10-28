@@ -856,9 +856,11 @@ function renderNight() {
     const owned = it.consumable ? 0 : g.upgrades[it.key];
     const maxed = !it.consumable && owned >= it.max;
     const useless = it.key === 'lawyer' && g.mistakes === 0;
-    const can = !maxed && !useless && left >= it.price;
-    const label = maxed ? 'Đã có' : `$${it.price}`;
-    return `<div class="opt shop-item${maxed ? ' owned' : ''}">
+    // chưa dùng tới công cụ này thì chưa bán nâng cấp của nó
+    const locked = it.tool && !S.day.unlocks.tools.has(it.tool);
+    const can = !maxed && !useless && !locked && left >= it.price;
+    const label = maxed ? 'Đã có' : locked ? `Mở từ ngày ${R.toolUnlockDay(it.tool)}` : `$${it.price}`;
+    return `<div class="opt shop-item${maxed ? ' owned' : ''}${locked ? ' locked' : ''}">
       <span class="txt"><b>${it.label}${it.max > 1 && owned ? ` (${owned}/${it.max})` : ''}</b><small>${it.desc}</small></span>
       <button class="btn" data-buy="${it.key}" ${can ? '' : 'disabled'}>${label}</button></div>`;
   }).join('');
@@ -920,7 +922,7 @@ function renderNight() {
 function buy(key) {
   const g = S.game;
   const it = E.SHOP.find((x) => x.key === key);
-  if (!it || g.money - expenseTotal() < it.price) return;
+  if (!it || g.money - expenseTotal() < it.price || (it.tool && !S.day.unlocks.tools.has(it.tool))) return;
   g.money -= it.price;
   if (it.key === 'lawyer') g.mistakes = Math.max(0, g.mistakes - 1);
   else g.upgrades[key]++;

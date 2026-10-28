@@ -36,13 +36,23 @@ export const DAY_MODS = {
   blackout: { icon: '🔌', name: 'Mất điện toàn trạm', desc: 'Không máy soi, vân tay, máy đối chiếu, máy nói dối. Phụ cấp lương ×1.5.', payMult: 1.5, noScan: true, noPrint: true, noGadgets: true },
 };
 
-/** Lên lịch ngày đặc biệt cho cả ván (ngày 1 luôn bình thường, mỗi loại tối đa 1 lần). Trả về mảng theo ngày. */
-export function planDayMods(rng, totalDays) {
+// Ngày cuối chương 2 — không ngẫu nhiên
+export const BOSS_DAY = { key: 'bossday', icon: '🐉', name: 'Ngày của Hắc Long', desc: 'Tin mật: trùm Hắc Long sẽ qua quầy 7 hôm nay dưới danh tính giả. Đối chiếu bảng ghim manh mối để nhận ra hắn — bắt được trùm thưởng $500.' };
+export const BOSS_BOUNTY = 500;
+
+/**
+ * Lên lịch ngày đặc biệt cho một chương (ngày 1 luôn bình thường, mỗi loại tối đa 1 lần).
+ * Chương cuối dành ngày cuối cho Hắc Long. Trả về mảng key theo ngày: out[day - 1].
+ */
+export function planDayMods(rng, totalDays, chapter = 1, lastChapter = 2) {
   const pool = shuffle(rng, Object.keys(DAY_MODS));
   const out = [null];
   for (let d = 2; d <= totalDays; d++) out.push(chance(rng, 0.7) && pool.length ? pool.pop() : null);
-  return out; // out[day - 1]
+  if (chapter === lastChapter) out[totalDays - 1] = 'bossday';
+  return out;
 }
+
+export const dayModFor = (key) => (key === 'bossday' ? BOSS_DAY : key ? { key, ...DAY_MODS[key] } : null);
 
 // ---------------- Sự kiện ban đêm ----------------
 // Hiệu ứng của một lựa chọn: money, rep, mistakes, rent, warmHome, blessing, sick (tên người thân), gamble {p, win, lose}
@@ -156,7 +166,7 @@ export function applyChoice(g, event, choice, rng) {
     const m = g.family.find((x) => x.name === eff.sick && x.alive);
     if (m && !m.sick) m.sick = 1;
   }
-  g.flags[event.key] = { choice: choice.key, day: g.day };
+  g.flags[event.key] = { choice: choice.key, day: g.absDay ?? g.day }; // ngày tuyệt đối, để khách quen vắt qua chương
   g.eventsSeen.push(event.key);
   return eff.result;
 }

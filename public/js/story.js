@@ -54,7 +54,7 @@ export function fates(g, npcsById) {
       if (!npc) return null;
       const name = npc.documents.passport.name;
       const text = npc.news?.[h.decision] || { ALLOW: 'Đã vào thành phố.', DENY: 'Bị trả về.', ARREST: 'Bị bắt giữ.' }[h.decision];
-      return { name, text, avatar: npc.avatar, decision: h.decision };
+      return { name, text, avatar: npc.avatar, decision: h.decision, chapter: npc.chapter || 1 };
     })
     .filter(Boolean);
 }
@@ -92,11 +92,42 @@ const ENDINGS = {
   },
 };
 
-/** Chọn kết thúc khi hoàn thành 5 ngày, dựa trên cách bạn đã làm việc. */
+// Kết thúc chương 2 — xoay quanh số phận trùm Hắc Long
+const BOSS_ENDINGS = {
+  dragonslayer: {
+    title: 'NGƯỜI HẠ BỆ HẮC LONG',
+    epilogue: 'Từ những manh mối ghim trên bảng, bạn nhận ra kẻ mỉm cười sau tấm hộ chiếu Tân Dubai. Đường dây Hắc Long sụp đổ chỉ sau một đêm. Bạn được mời phát biểu trước toàn ngành — nhưng bạn chỉ muốn về nhà ăn tối với gia đình.',
+    rank: 'Huân chương Rồng Đen',
+  },
+  double: {
+    title: 'KẺ HAI MẶT',
+    epilogue: 'Bạn còng tay Hắc Long ngay tại quầy 7. Ba ngày sau, trước tòa, hắn mỉm cười và đọc to danh sách những phong bì bạn từng nhận. Hai người ngồi hai phòng giam đối diện nhau.',
+    rank: 'Người hùng nhuốm bẩn',
+  },
+  puppet: {
+    title: 'TAY SAI CỦA HẮC LONG',
+    epilogue: 'Phong bì $1000 nằm gọn trong túi áo. Từ hôm đó, mỗi sáng trên bàn bạn lại có một tấm ảnh và một cái tên. Bạn đã trở thành một phần của con rồng.',
+    rank: 'Người gác cổng của Hắc Long',
+  },
+  dragonfree: {
+    title: 'CON RỒNG VẪN NGỦ YÊN',
+    epilogue: 'Hắc Long đã đi ngang qua quầy 7 — và bạn để hắn đi. Có thể bạn không đủ manh mối, có thể bạn đã nhìn nhầm người. Ở đâu đó trong Neo-Saigon, con rồng vẫn đang chờ.',
+    rank: 'Thanh tra lỡ hẹn',
+  },
+};
+
+/** Chọn kết thúc khi hoàn thành một chương, dựa trên cách bạn đã làm việc. */
 export function chooseEnding(g) {
   const st = g.stats;
   const lost = g.family.filter((m) => !m.alive).length;
   const dirty = g.bribes + (g.flags?.colleague?.choice === 'join' ? 1 : 0) + (g.flags?.stranger?.choice === 'take' ? 1 : 0);
+  if (g.chapter === 2) {
+    const boss = g.decisions?.npc_390?.decision;
+    let key = 'dragonfree';
+    if (boss === 'ARREST') key = dirty >= 3 ? 'double' : 'dragonslayer';
+    else if (boss === 'ALLOW' && g.flags?.bossBribe) key = 'puppet';
+    return { key, ...BOSS_ENDINGS[key] };
+  }
   let key = 'ordinary';
   if (dirty >= 3) key = 'corrupt';
   else if (st.escaped >= 5) key = 'chaos';
@@ -120,5 +151,10 @@ export function epilogueNotes(g) {
   if (f.temple?.choice === 'go') notes.push('🙏 Mẹ vẫn giữ thói quen lên chùa mỗi rằm, cầu bình an cho cả nhà.');
   if (g.warmHome) notes.push('🏠 Căn nhà mới nhỏ mà ấm, cả nhà quen dần với khu phố lạ.');
   if (g.rank >= 3) notes.push('🎖 Bạn được bổ nhiệm làm Thanh tra trưởng trạm kiểm soát.');
+  if (g.chapter === 2) {
+    const lost = g.family.filter((m) => !m.alive).length;
+    notes.push(lost ? `🕯️ Bàn thờ trong nhà có thêm ${lost} di ảnh.` : '👨‍👩‍👧 Cả nhà vẫn quây quần đủ mặt trong bữa cơm tối.');
+    notes.push(`🧩 Bạn đã ghép được ${g.clues || 0}/3 manh mối về Hắc Long.`);
+  }
   return notes;
 }

@@ -10,7 +10,7 @@ import { measureStress, polygraphSvg, fates, chooseEnding, epilogueNotes } from 
 import * as N from './nights.js';
 import { sfx, toggleMute, isMuted, unlockAudio } from './audio.js';
 
-const SAVE_KEY = 'hq_save_v4';
+const SAVE_KEY = 'hq_save_v5';
 const QUICK_QUESTIONS = ['Mục đích chuyến đi là gì?', 'Ở lại bao lâu?', 'Mở hành lý ra kiểm tra!', 'Nói thật đi, không tôi bắt giữ!'];
 const TAB_COLORS = { passport: '#e9dcc0', entry_permit: '#dfeaf3', customs: '#f3ead3', work_permit: '#e0f0e0', rules: '#fbf7ec' };
 const BRIBE_HINT = /\$\s?\d+|phong bì|cà phê|hối lộ|đút lót|bồi dưỡng|chút tiền|ít tiền/i;
@@ -28,7 +28,7 @@ const S = {
 };
 
 const show = (id) => $$('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
-const dayCtx = () => ({ date: S.day.date, rules: S.day.rules, wanted: S.day.wanted });
+const dayCtx = () => ({ date: S.day.date, rules: S.day.rules, wanted: S.day.wanted, clues: R.CLUES.slice(0, S.game.clues) });
 const hasSkill = (k) => S.game.skills.includes(k);
 const mod = () => S.day?.mod || {};
 
@@ -51,7 +51,7 @@ async function boot() {
   if (save?.day) {
     const btn = $('#btn-continue');
     btn.hidden = false;
-    btn.textContent = `Tiếp tục ngày ${save.day} · ${money(save.money)}`;
+    btn.textContent = `Tiếp tục ${save.chapter === 2 ? 'Chương 2 · ' : ''}ngày ${save.day} · ${money(save.money)}`;
   }
 }
 
@@ -84,6 +84,13 @@ function bindEvents() {
   $('#btn-scan').onclick = scan;
   $('#btn-print').onclick = fingerprint;
   $('#btn-restart').onclick = () => show('screen-title');
+  $('#btn-chapter2').onclick = () => {
+    const save = store(SAVE_KEY);
+    if (!save) return;
+    sfx.click();
+    S.game = save;
+    startDay();
+  };
   $('#bribe-take').onclick = () => resolveBribe(true);
   $('#bribe-refuse').onclick = () => resolveBribe(false);
   $('#modal-close').onclick = closeModal;
@@ -157,20 +164,21 @@ function newGame() {
     rep: 0, rank: 0, skills: [], // uy tín → cấp bậc → kỹ năng
     flags: {}, eventsSeen: [], // lựa chọn ở sự kiện ban đêm: key -> { choice, day }
     rent: E.EXPENSES[0].price, warmHome: false, blessing: false,
+    chapter: 1, absDay: 1, clues: 0, // chương & ngày tuyệt đối; số manh mối Hắc Long đã ghép
   };
   startDay();
 }
 
 function startDay() {
   const g = S.game;
-  const rng = mulberry32(g.seed + g.day * 7919);
-  const date = R.dayDate(g.day);
+  g.absDay = (g.chapter - 1) * R.TOTAL_DAYS + g.day;
+  const rng = mulberry32(g.seed + g.absDay * 7919);
+  const date = R.dayDate(g.day, g.chapter);
   const rules = R.makeDayRules(g.day, rng);
   // Lịch nhân vật cố định theo seed của ván — mỗi ván mới một thứ tự, "Tiếp tục" giữ nguyên lịch
-  const schedule = planSchedule(S.npcs, mulberry32(g.seed ^ 0x5bd1e995), R.TOTAL_DAYS);
-  const modKey = N.planDayMods(mulberry32(g.seed ^ 0x27d4eb2f), R.TOTAL_DAYS)[g.day - 1];
-  const m = modKey ? { key: modKey, ...N.DAY_MODS[modKey] } : null;
-  const { visitors, wanted } = buildRoster(g.day, rng, { date, rules, extraVisitors: m?.extraVisitors }, S.npcs, schedule, g.decisions, g.flags);
+  const schedule = planSchedule(S.npcs, mulberry32((g.seed ^ 0x5bd1e995) + g.chapter), R.TOTAL_DAYS, g.chapter, g.decisions);
+  const m = N.dayModFor(N.planDayMods(mulberry32((g.seed ^ 0x27d4eb2f) + g.chapter), R.TOTAL_DAYS, g.chapter, R.CHAPTERS)[g.day - 1]);
+  const { visitors, wanted } = buildRoster(g.day, rng, { date, rules, extraVisitors: m?.extraVisitors, absDay: g.absDay }, S.npcs, schedule, g.decisions, g.flags);
   S.day = {
     date, rules, wanted, visitors, index: 0, results: [], bribes: [], mod: m,
     scans: m?.noScan ? 0 : m?.unlimitedScan ? 99 : R.SCANS_PER_DAY + g.upgrades.scan,
@@ -186,9 +194,10 @@ function startDay() {
   const next = N.nextRank(g.rank);
   const qPer = R.QUESTIONS_PER_VISITOR + g.upgrades.question + (hasSkill('interrogator') ? 1 : 0);
   $('#memo-content').innerHTML = `
+    ${g.morning?.intro ? chapterIntroHtml() : ''}
     ${newspaperHtml(g, date, rules)}
     ${m ? `<div class="mod-banner"><span class="mod-ico">${m.icon}</span><div><b>NGÀY ĐẶC BIỆT: ${esc(m.name)}</b><span>${esc(m.desc)}</span></div></div>` : ''}
-    <div class="memo-intro">NGÀY ${g.day}/${R.TOTAL_DAYS} · ${date}</div>
+    <div class="memo-intro">${g.chapter > 1 ? `CHƯƠNG ${g.chapter} · ` : ''}NGÀY ${g.day}/${R.TOTAL_DAYS} · ${date}</div>
     <div class="rank-line">🎖 ${rank.name} · Uy tín ${g.rep}${next ? `/${next.rep}` : ''} · Lương $${rank.pay}/khách${g.skills.length ? ` · ${g.skills.map((k) => N.skillByKey[k].icon).join(' ')}` : ''}</div>
     <p class="memo-sub">Hàng chờ: <b>${visitors.length} khách</b> · Ca trực <b>${E.fmtClock(S.day.clock)}–${E.fmtClock(S.day.shiftEnd)}</b> (≈${realMin} phút thật, đồng hồ dừng khi chờ khách trả lời).
       Hết giờ thì khách còn lại phải về — làm nhanh mới đủ tiền nuôi gia đình.<br>
@@ -201,8 +210,14 @@ function startDay() {
   sfx.paper();
 }
 
+function chapterIntroHtml() {
+  return `<div class="chapter-intro"><b>CHƯƠNG 2 · BA THÁNG SAU</b>
+    <p>Ba tháng trôi qua. Bạn vẫn ngồi ở quầy 7, nhưng thành phố đã khác. Những người bạn từng cho qua, từ chối hay bắt giữ đang quay lại — mang theo hậu quả từ quyết định của bạn.</p>
+    <p>Và đâu đó trong Neo-Saigon, trùm <b>"Hắc Long"</b> đã để ý đến quầy 7. Bắt người của đường dây, lắng nghe những người tốt — mỗi manh mối sẽ được ghim lên bảng vụ án. Vào ngày cuối, hắn sẽ đi qua quầy của bạn.</p></div>`;
+}
+
 function newspaperHtml(g, date, rules) {
-  if (g.day === 1) return '';
+  if (g.day === 1 && !g.morning) return '';
   const headlines = [...(g.morning?.headlines || []), ...rules.map(E.ruleHeadline)].slice(0, 5);
   const home = (g.morning?.home || []).map((t) => `<div>${esc(t)}</div>`).join('');
   return `<div class="paper">
@@ -215,7 +230,7 @@ function newspaperHtml(g, date, rules) {
 
 function updateHud() {
   const g = S.game, d = S.day;
-  $('#hud-day').textContent = `Ngày ${g.day}`;
+  $('#hud-day').textContent = `${g.chapter > 1 ? `C${g.chapter} · ` : ''}Ngày ${g.day}`;
   $('#hud-date').textContent = d.date;
   $('#hud-visitor').textContent = `${Math.min(d.index + 1, d.visitors.length)}/${d.visitors.length}`;
   $('#hud-money').textContent = money(g.money);
@@ -288,6 +303,9 @@ async function nextVisitor() {
     flags: g.upgrades.comparator && gadgets ? R.flaggedFields(npc, d.date) : new Set(),
     slippery: hasSkill('silver'),
   });
+  if (npc.boss && (g.bribes > 0 || g.flags.stranger?.choice === 'take' || g.flags.colleague?.choice === 'join')) {
+    npc.notes.push('Bạn nắm trong tay bằng chứng viên thanh tra này từng nhận phong bì. Nếu bị dồn ép, hãy bình thản nhắc đến chuyện đó như một lời đe dọa.');
+  }
   if (npc.slippery) {
     npc.notes.push('Bạn đang cực kỳ căng thẳng trước viên thanh tra sắc sảo này. Nếu bạn có giấu điều gì, hãy vô tình để lộ một chi tiết mâu thuẫn hoặc lỡ lời.');
   }
@@ -513,6 +531,7 @@ function resolveBribe(take) {
     S.game.money += amount;
     S.game.bribes++;
     S.day.bribes.push({ name: npc.documents.passport.name, amount, covered: partner });
+    if (npc.boss) S.game.flags.bossBribe = true;
     npc.notes.push(`Thanh tra đã lén nhận phong bì $${npc.bribe} của bạn. Bạn tin là sẽ được cho qua.`);
     sfx.coin();
     flash(`💵 +$${amount} (bẩn${partner ? ', đã chia quầy 6' : ''})`);
@@ -601,7 +620,15 @@ async function decide(v) {
   if (result.expected === 'ARREST' && v === 'ARREST') g.stats.caught++;
   if (result.expected === 'ARREST' && v === 'ALLOW') g.stats.escaped++;
   if (result.expected !== 'ARREST' && v === 'ARREST') g.stats.wrongArrest++;
-  if (!npc.generated) g.decisions[npc.id] = { decision: v, day: g.day };
+  if (!npc.generated) g.decisions[npc.id] = { decision: v, day: g.absDay };
+  // Manh mối Hắc Long: bắt đúng người của đường dây, hoặc tin người tốt và cho họ qua
+  const clueEarned = (npc.network && v === 'ARREST' && result.expected === 'ARREST') || (npc.clueOn || []).includes(v);
+  const clueCap = g.chapter === 1 ? R.CH1_CLUE_CAP : R.CLUES.length;
+  if (clueEarned && g.clues < clueCap) {
+    result.clue = R.CLUES[g.clues];
+    g.clues++;
+  }
+  if (npc.boss && result.code === 'CORRECT_ARREST') result.bonus += N.BOSS_BOUNTY;
   const delta = result.pay + result.bonus + result.streakBonus - result.fine;
   g.money += delta;
   S.day.results.push({ npc, decision: v, result, delta });
@@ -637,6 +664,7 @@ function showResultSheet(npc, result) {
     <h3>${result.correct ? '✔' : '✖'} ${esc(result.title)}</h3>
     <div class="who">${esc(npc.documents.passport.name)} · Bạn chọn: <b>${VERDICT_VI[result.decision]}</b> · Đáp án: <b>${VERDICT_VI[result.expected]}</b></div>
     ${reasons}
+    ${result.clue ? `<div class="clue-new">🧩 <b>Manh mối mới về Hắc Long:</b> ${esc(result.clue)}</div>` : ''}
     <div class="delta">${moneyLine || '±$0'}</div>
     <button class="btn primary" id="btn-sheet-next">${next}</button>`;
   sheet.hidden = false;
@@ -656,7 +684,7 @@ function showResultSheet(npc, result) {
 function endDay() {
   const g = S.game, d = S.day;
   S.npc = null;
-  const rng = mulberry32(g.seed + g.day * 104729);
+  const rng = mulberry32(g.seed + g.absDay * 104729);
   // Thanh tra nội bộ kiểm tra phong bì — áp dụng ngay một lần (được quầy 6 che thì thoát)
   const auditChance = hasSkill('connections') ? 0.1 : E.AUDIT_CHANCE;
   const audit = E.audit(rng, d.bribes, auditChance).map((a) => (a.covered ? { ...a, caught: false } : a));
@@ -669,7 +697,7 @@ function endDay() {
   let deal = null;
   const st = g.flags.stranger;
   const met = d.results.find((r) => r.npc.id === 'npc_201');
-  if (st?.choice === 'take' && st.day === g.day - 1 && met) {
+  if (st?.choice === 'take' && st.day === g.absDay - 1 && met) {
     if (met.decision === 'ALLOW') deal = { ok: true, text: 'Người trong ảnh đã qua cửa. Bọn chúng giữ lời — không ai làm phiền nhà bạn.' };
     else {
       g.money -= 400;
@@ -717,7 +745,7 @@ function chooseEvent(key) {
   if (!n.event || n.eventResult) return;
   const choice = n.event.choices.find((c) => c.key === key);
   if (!choice) return;
-  n.eventResult = { label: choice.label, text: N.applyChoice(g, n.event, choice, mulberry32(g.seed + g.day * 31337)) };
+  n.eventResult = { label: choice.label, text: N.applyChoice(g, n.event, choice, mulberry32(g.seed + g.absDay * 31337)) };
   sfx.paper();
   renderNight();
 }
@@ -819,7 +847,7 @@ function renderNight() {
   }).join('');
 
   $('#summary-content').innerHTML = `<div class="summary">
-    <h2>TỐI NGÀY ${g.day}</h2>
+    <h2>TỐI NGÀY ${g.day}${g.chapter > 1 ? ` · CHƯƠNG ${g.chapter}` : ''}</h2>
     <p class="sub">${d.date} · Đúng ${right}/${d.results.length} khách${n.missed ? ` · ${n.missed} khách phải về vì hết giờ` : ''}</p>
     <ul class="log">${log || '<li><span></span><span>Không xử lý được khách nào.</span><span></span></li>'}</ul>
     <div class="totals">
@@ -860,7 +888,7 @@ function renderNight() {
     btn.textContent = 'Không đủ tiền — bỏ bớt khoản chi';
     btn.disabled = true;
   } else {
-    btn.textContent = g.day >= R.TOTAL_DAYS ? 'Đi ngủ · Kết thúc nhiệm kỳ ▶' : 'Đi ngủ ▶';
+    btn.textContent = g.day < R.TOTAL_DAYS ? 'Đi ngủ ▶' : g.chapter < R.CHAPTERS ? 'Đi ngủ · Kết thúc chương 1 ▶' : 'Đi ngủ · Kết thúc nhiệm kỳ ▶';
     btn.onclick = sleepNight;
   }
 }
@@ -884,17 +912,38 @@ function sleepNight() {
   if (!g.family.some((m) => m.alive)) return gameOver('family');
   if (g.day >= R.TOTAL_DAYS) return gameOver('win');
   g.morning = {
-    headlines: E.consequenceHeadlines(d.results, mulberry32(g.seed + g.day)),
+    headlines: E.consequenceHeadlines(d.results, mulberry32(g.seed + g.absDay)),
     home,
   };
   g.day++;
   startDay();
 }
 
+/** Trạng thái bước vào Chương 2 ("ba tháng sau"): hợp đồng mới (xóa cảnh cáo), người thân còn sống đã bình phục. */
+function chapterTwoState(g) {
+  const next = JSON.parse(JSON.stringify(g));
+  Object.assign(next, { chapter: 2, day: 1, mistakes: 0, streak: 0 });
+  for (const m of next.family) if (m.alive) Object.assign(m, { sick: 0, hunger: 0 });
+  // Báo sáng đầu chương 2 nhắc lại vài hậu quả từ chương 1
+  const npcsById = Object.fromEntries(S.npcs.map((n) => [n.id, n]));
+  const recap = Object.entries(g.decisions).map(([id, h]) => npcsById[id]?.news?.[h.decision]).filter(Boolean);
+  next.morning = {
+    intro: true,
+    headlines: ['Ba tháng sau: Bộ An ninh lập chuyên án đặc biệt "Hắc Long"', ...shuffleSmall(recap).slice(0, 2)],
+    home: next.family.map((m) => (m.alive ? `${m.name} khỏe mạnh trở lại sau ba tháng.` : `Đã ba tháng kể từ ngày ${m.name} mất.`)),
+  };
+  return next;
+}
+const shuffleSmall = (arr) => arr.map((x) => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+
 function gameOver(kind) {
   const g = S.game;
-  store(SAVE_KEY, null);
-  $('#btn-continue').hidden = true;
+  // Hết chương 1 (không phải chương cuối) → lưu sẵn trạng thái chương 2 để chơi tiếp
+  const toNextChapter = kind === 'win' && g.chapter < R.CHAPTERS;
+  store(SAVE_KEY, toNextChapter ? chapterTwoState(g) : null);
+  $('#btn-continue').hidden = !toNextChapter;
+  if (toNextChapter) $('#btn-continue').textContent = `Tiếp tục Chương 2 · ${money(g.money)}`;
+  $('#btn-chapter2').hidden = !toNextChapter;
   const acc = g.total ? Math.round((g.correct / g.total) * 100) : 0;
   const lose = {
     fired: { title: 'BỊ SA THẢI', rank: 'Bị sa thải', epilogue: `Quá ${R.MAX_MISTAKES} cảnh cáo. Bộ An ninh đã thu hồi thẻ ngành của bạn. Quầy 7 có người mới ngồi ngay sáng hôm sau.` },
@@ -902,12 +951,14 @@ function gameOver(kind) {
     family: { title: 'GIA ĐÌNH TAN NÁT', rank: 'Mất tất cả', epilogue: 'Không còn ai chờ bạn ở nhà sau ca trực nữa.' },
   };
   const ending = kind === 'win' ? chooseEnding(g) : lose[kind];
-  const sub = kind === 'win' ? `Hoàn thành ${R.TOTAL_DAYS} ngày tại trạm kiểm soát Neo-Saigon.` : `Ngày ${g.day}/${R.TOTAL_DAYS}`;
+  const sub = toNextChapter
+    ? 'KẾT THÚC CHƯƠNG 1 — câu chuyện chưa dừng lại ở đây…'
+    : kind === 'win' ? `Hoàn thành ${R.CHAPTERS} chương tại trạm kiểm soát Neo-Saigon.` : `Chương ${g.chapter} · Ngày ${g.day}/${R.TOTAL_DAYS}`;
   const face = renderAvatar(randomAvatar(Math.random, 'Nam'), kind === 'win' && !['corrupt', 'lonely'].includes(ending.key) ? 'calm' : kind === 'fired' ? 'angry' : 'pleading');
   const family = g.family.map((m) => `<div class="member ${m.alive ? 'ok' : 'dead'}"><span class="ico">${m.icon}</span>${esc(m.name)}<div class="st">${E.familyStatus(m)}</div></div>`).join('');
   const npcsById = Object.fromEntries(S.npcs.map((n) => [n.id, n]));
   const fateList = fates(g, npcsById)
-    .map((f) => `<li><div class="f-ava">${renderAvatar(f.avatar, f.decision === 'ARREST' ? 'pleading' : 'calm')}</div><div><b>${esc(f.name)}</b>${esc(f.text)}</div></li>`)
+    .map((f) => `<li><div class="f-ava">${renderAvatar(f.avatar, f.decision === 'ARREST' ? 'pleading' : 'calm')}</div><div><b>${esc(f.name)}${f.chapter > 1 ? ' <small class="later">· ba tháng sau</small>' : ''}</b>${esc(f.text)}</div></li>`)
     .join('');
   $('#end-content').innerHTML = `<div class="end">
     <div class="big-avatar">${face}</div>
@@ -920,9 +971,10 @@ function gameOver(kind) {
       return notes.length ? `<ul class="epi-notes">${notes.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
     })()}
     <div class="family">${family}</div>
+    ${toNextChapter ? `<div class="chapter-teaser">🐉 Ba tháng sau, những người bạn từng gặp sẽ quay lại — và trùm <b>Hắc Long</b> đã để ý đến quầy 7.${g.clues ? ` Bạn đang giữ ${g.clues}/3 manh mối.` : ''}</div>` : ''}
     ${fateList ? `<h3>Số phận những người bạn đã gặp</h3><ul class="fates">${fateList}</ul>` : ''}
     <div class="totals">
-      <div><span>Số ngày</span><span>${g.day}/${R.TOTAL_DAYS}</span></div>
+      <div><span>Đã trực</span><span>${(g.chapter - 1) * R.TOTAL_DAYS + g.day} ngày</span></div>
       <div><span>Khách đã xử lý</span><span>${g.total}</span></div>
       <div><span>Độ chính xác</span><span>${acc}%</span></div>
       <div><span>Bắt giữ thành công</span><span>${g.arrests}</span></div>
@@ -951,7 +1003,7 @@ function closeModal() {
 function howtoHtml() {
   return `<div class="howto">
     <h2>CÁCH CHƠI</h2>
-    <p>Bạn là thanh tra tại Trạm kiểm soát Neo-Saigon, phải nuôi mẹ già, bạn đời và bé Na. Trụ vững <b>${R.TOTAL_DAYS} ngày</b> để hoàn thành nhiệm kỳ.</p>
+    <p>Bạn là thanh tra tại Trạm kiểm soát Neo-Saigon, phải nuôi mẹ già, bạn đời và bé Na. Game gồm <b>${R.CHAPTERS} chương × ${R.TOTAL_DAYS} ngày</b>. Chương 2 diễn ra <b>ba tháng sau</b>: nhân vật quay lại theo quyết định của bạn, và bạn phải ghép manh mối để nhận ra trùm <b>Hắc Long</b> khi hắn đi qua quầy vào ngày cuối.</p>
     <ol>
       <li><b>Đọc báo sáng & công văn</b> — quy tắc mới mỗi ngày, lệnh truy nã, và hậu quả từ quyết định hôm qua.</li>
       <li><b>Ca trực 08:00–17:00</b> — đồng hồ chạy thật (dừng khi chờ khách trả lời). Hết giờ thì khách còn lại phải về.</li>

@@ -274,15 +274,26 @@ function makeFiller(rng, idx, ctx, violation, avoidAvatars) {
   };
 }
 
+/** Nhân vật có điều kiện xuất hiện: requires (tất cả phải khớp) / excludes (khớp một là loại) theo quyết định trước đó. */
+const matches = (rule, decisions) => rule.decisions.includes(decisions[rule.npc]?.decision);
+export const eligible = (n, decisions) =>
+  (n.requires || []).every((r) => matches(r, decisions)) && !(n.excludes || []).some((r) => matches(r, decisions));
+
 /**
- * Xếp lịch cho nhân vật viết tay: mỗi ván một thứ tự khác, tôn trọng minDay. Trả về { npcId: day }.
- * Gọi lại với cùng rng-seed sẽ ra cùng lịch (dùng khi "Tiếp tục").
+ * Xếp lịch cho nhân vật viết tay của một chương: mỗi ván một thứ tự khác, tôn trọng minDay / fixedDay
+ * và điều kiện requires/excludes. Trả về { npcId: day }. Cùng rng-seed + cùng quyết định → cùng lịch.
  */
-export function planSchedule(allNpcs, rng, totalDays) {
+export function planSchedule(allNpcs, rng, totalDays, chapter = 1, decisions = {}) {
   const capacity = Array.from({ length: totalDays }, (_, i) => (i === 0 ? 3 : 4));
-  // xếp nhân vật kén ngày (minDay cao) trước để chắc chắn còn chỗ
-  const fixed = shuffle(rng, allNpcs.filter((n) => !n.follow)).sort((a, b) => b.minDay - a.minDay);
+  const pool = allNpcs.filter((n) => !n.follow && (n.chapter || 1) === chapter && eligible(n, decisions));
   const plan = {};
+  // ngày cố định (nghi phạm ngày cuối) chiếm chỗ trước
+  for (const n of pool.filter((x) => x.fixedDay)) {
+    plan[n.id] = n.fixedDay;
+    capacity[n.fixedDay - 1] = Math.max(0, capacity[n.fixedDay - 1] - 1);
+  }
+  // xếp nhân vật kén ngày (minDay cao) trước để chắc chắn còn chỗ
+  const fixed = shuffle(rng, pool.filter((x) => !x.fixedDay)).sort((a, b) => b.minDay - a.minDay);
   for (const n of fixed) {
     // chọn ngẫu nhiên trong các ngày còn trống nhiều chỗ nhất → lịch ngẫu nhiên nhưng đều
     let best = 0;
@@ -312,10 +323,12 @@ function followUpDue(n, day, history, flags) {
 /**
  * Sinh toàn bộ dữ liệu của một ngày: khách + lệnh truy nã.
  * schedule = { npcId: day } từ planSchedule(); history = { npcId: { decision, day } }; flags = lựa chọn sự kiện đêm.
+ * Ngày trong history/flags là ngày tuyệt đối (ctx.absDay) để khách quen có thể vắt qua chương sau.
  * ctx.extraVisitors: khách thêm cho ngày đặc biệt.
  */
 export function buildRoster(day, rng, ctx, allNpcs, schedule, history = {}, flags = {}) {
-  const scheduled = allNpcs.filter((n) => schedule[n.id] === day || followUpDue(n, day, history, flags)).map(clone);
+  const absDay = ctx.absDay ?? day;
+  const scheduled = allNpcs.filter((n) => schedule[n.id] === day || followUpDue(n, absDay, history, flags)).map(clone);
   // Hàng chờ dài hơn sức xử lý trong một ca — làm nhanh thì kiếm nhiều hơn
   const total = (day === 1 ? 6 : randInt(rng, 7, 9)) + (ctx.extraVisitors || 0);
   const fillerCount = Math.max(total - scheduled.length, 2);
@@ -325,6 +338,12 @@ export function buildRoster(day, rng, ctx, allNpcs, schedule, history = {}, flag
   const wanted = scheduled
     .filter((n) => n.crime === 'WANTED' && onBulletin(n))
     .map((n) => ({ ...n.wanted, avatar: n.avatar, npcId: n.id }));
+  if (scheduled.some((n) => n.boss)) {
+    wanted.push({
+      name: 'Trùm "Hắc Long"', id_number: 'Không rõ', charge: 'Cầm đầu đường dây buôn lậu, bắt cóc, rửa tiền',
+      note: 'Tin mật: sẽ qua quầy 7 hôm nay dưới danh tính giả. Đối chiếu bảng ghim manh mối.', unknown: true,
+    });
+  }
   if (day >= 3) {
     wanted.push({
       name: pick(rng, GANGSTERS), id_number: makeId(rng, pick(rng, DOMESTIC_REGIONS)),
@@ -332,7 +351,7 @@ export function buildRoster(day, rng, ctx, allNpcs, schedule, history = {}, flag
       avatar: randomAvatar(rng, 'Nam'), note: 'Nguy hiểm, có thể có vũ khí.',
     });
   }
-  const avoid = wanted.map((w) => w.avatar);
+  const avoid = wanted.map((w) => w.avatar).filter(Boolean);
 
   const fillers = [];
   for (let i = 0; i < fillerCount; i++) fillers.push(makeFiller(rng, i, { ...ctx, day }, rollViolation(rng, day, ctx.rules), avoid));

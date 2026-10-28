@@ -101,8 +101,8 @@ export function renderRules(ctx, { memo = false } = {}) {
   const wanted = ctx.wanted.length
     ? `<h4>🚨 Lệnh truy nã</h4><div class="wanted-list">${ctx.wanted
         .map(
-          (w) => `<div class="wanted">
-            <div class="w-photo">${renderAvatar(w.avatar, 'angry')}</div>
+          (w) => `<div class="wanted${w.unknown ? ' boss' : ''}">
+            <div class="w-photo">${w.unknown ? '<span class="w-unknown">?</span>' : renderAvatar(w.avatar, 'angry')}</div>
             <div class="w-info"><b>${esc(w.name)}</b><span>Số HC: ${esc(w.id_number)}</span><span>Tội danh: ${esc(w.charge)}</span>${w.note ? `<em>${esc(w.note)}</em>` : ''}</div>
           </div>`,
         )
@@ -115,7 +115,17 @@ export function renderRules(ctx, { memo = false } = {}) {
     <h4>Quy định thường trực</h4>
     <ul class="rule-list">${standing}</ul>
     ${wanted}
+    ${caseBoard(ctx.clues)}
   </article>`;
+}
+
+/** Bảng ghim vụ án Hắc Long: manh mối đã có + ô trống cho manh mối chưa lộ. */
+export function caseBoard(clues, total = 3) {
+  if (!clues?.length) return '';
+  const pins = Array.from({ length: total }, (_, i) =>
+    clues[i] ? `<li class="pin">📌 ${esc(clues[i])}</li>` : '<li class="pin empty">❔ Manh mối chưa lộ — bắt người của đường dây hoặc lắng nghe người tốt kể lại</li>',
+  ).join('');
+  return `<h4>🐉 Bảng ghim vụ án Hắc Long (${clues.length}/${total})</h4><ul class="case-board">${pins}</ul>`;
 }
 
 /** Kết quả tra vân tay trong cơ sở dữ liệu quốc gia. */

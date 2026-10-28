@@ -2,7 +2,18 @@
 import { addDays, pick, shuffle } from './util.js';
 
 export const START_DATE = '2026-10-28';
-export const TOTAL_DAYS = 5;
+export const TOTAL_DAYS = 5; // số ngày mỗi chương
+export const CHAPTERS = 2;
+// Chương 2 diễn ra "ba tháng sau"
+const CHAPTER_START = { 1: START_DATE, 2: '2027-02-01' };
+
+// Manh mối về trùm Hắc Long, mở theo thứ tự khi bắt được người của đường dây (hoặc người tốt kể lại)
+export const CLUES = [
+  'Trùm Hắc Long luôn đi bằng hộ chiếu cấp tại Tân Dubai.',
+  'Hắn khai đi công tác cho "Công ty Bảo vệ Hắc Long" — công ty bình phong của đường dây.',
+  'Vân tay của hắn đã bị xóa khỏi cơ sở dữ liệu quốc gia.',
+];
+export const CH1_CLUE_CAP = 2; // chương 1 chỉ lộ được tối đa 2 manh mối
 export const PAY_CORRECT = 50;
 export const ARREST_BONUS = 20;
 export const FINE_WRONG = 30;
@@ -19,7 +30,7 @@ export const DOMESTIC_REGIONS = ['Neo-Saigon', 'Liên khu Mê Kông', 'Đà Lạ
 export const FOREIGN_REGIONS = ['Thành bang Phnom Penh', 'Tân Bangkok', 'Liên bang Nga', 'Neo-Tokyo', 'Seoul Mới', 'Manila Ngầm', 'Tân Dubai'];
 export const WORK_PURPOSES = ['Công tác', 'Lao động'];
 
-export const dayDate = (day) => addDays(START_DATE, day - 1);
+export const dayDate = (day, chapter = 1) => addDays(CHAPTER_START[chapter], day - 1);
 
 const RULE_BUILDERS = {
   BAN_CATEGORY: (rng, used) => {
@@ -88,6 +99,7 @@ export function checkRules(npc, ctx) {
 
   if (npc.crime === 'WANTED') v.push({ sev: 'ARREST', doc: 'rules', text: npc.crime_detail || 'Đối tượng truy nã' });
   if (npc.crime === 'CONTRABAND') v.push({ sev: 'ARREST', doc: null, text: `Buôn lậu: ${npc.crime_detail}` });
+  if (npc.crime === 'BOSS') v.push({ sev: 'ARREST', doc: null, text: npc.crime_detail });
 
   // Quy tắc của ngày
   const purpose = d.entry_permit?.purpose;

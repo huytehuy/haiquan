@@ -39,7 +39,10 @@ Mở http://localhost:3000 (trên điện thoại cùng mạng Wi-Fi: `http://<I
 - **Ngày đặc biệt** (từ ngày 2, mỗi loại tối đa 1 lần/ván): Thanh tra cấp trên giám sát (thưởng/phạt ×2), Lễ hội ánh sáng (+3 khách, lương ×1.5), Bão (ca đến 13:00, hỏng máy soi), Báo động khủng bố (soi không giới hạn, cho qua khi chưa soi là vi phạm), Mất điện (không máy móc, lương ×1.5).
 - **Sự kiện ban đêm** có lựa chọn và hậu quả: người lạ dúi tiền "mua đường" cho kẻ truy nã, học phí của bé Na, chiếc hộp của hàng xóm, quầy 6 rủ chia phong bì, mẹ đi chùa (phúc lành chặn 1 lần ốm), chủ nhà tăng giá / chuyển nhà, bé Na sốt cao, chiếu bạc.
 - **Khách quen**: nhân vật quay lại tùy quyết định của bạn — vợ của kẻ bị bắt đến xin thăm chồng, kẻ được tha tái phạm với lượng hàng gấp bội, người bị từ chối quay lại bằng giấy tờ giả, đàn em của trùm truy nã đến đe dọa…
-- **6 kết thúc**: Người hùng cửa khẩu · Kẻ ăn tiền · Thành phố hỗn loạn · Bàn tay sắt · Cái giá của bổn phận · Một thanh tra bình thường — kèm số phận từng nhân vật bạn đã gặp.
+- **Chương 2 · Ba tháng sau** (mở khi hoàn thành chương 1): giữ nguyên tiền, cấp bậc, kỹ năng, gia đình; cảnh cáo được xóa. Nhân vật quay lại theo quyết định chương 1 — Alexei ra tù (biết ơn nếu vợ ông được vào thăm, hoặc mang dao trả thù nếu con gái đã mất), Alexei "đổi đời" thành quản lý đường dây nếu từng được cho qua, bà Bảy mang bánh tét biếu hoặc con trai thành nhà báo điều tra, Tuấn thành đốc công, "Rắn" tái xuất hoặc luật sư của hắn đến mua chuộc…
+- **Truy tìm Hắc Long**: bắt đúng người của đường dây (hoặc tin những người tốt và cho họ qua) để ghim manh mối lên **bảng vụ án** (tab Quy tắc). Chương 1 lộ tối đa 2/3 manh mối. Ngày cuối chương 2, trùm đi qua quầy cùng 2 người trùng manh mối — nhận ra hắn bằng hộ chiếu, nơi làm việc và vân tay. Bắt được trùm thưởng $500.
+- **4 kết thúc chương 2**: Người hạ bệ Hắc Long · Kẻ hai mặt · Tay sai của Hắc Long · Con rồng vẫn ngủ yên.
+- **6 kết thúc chương 1**: Người hùng cửa khẩu · Kẻ ăn tiền · Thành phố hỗn loạn · Bàn tay sắt · Cái giá của bổn phận · Một thanh tra bình thường — kèm số phận từng nhân vật bạn đã gặp.
 - Game Over sớm khi: quá 3 cảnh cáo, không đủ tiền nhà, hoặc mất cả gia đình.
 
 ## Cấu trúc
@@ -52,7 +55,7 @@ vercel.json            outputDirectory = public
 public/
   index.html           Màn hình: tiêu đề, báo sáng + công văn, quầy kiểm soát, ban đêm, kết thúc
   css/style.css        Giao diện mobile-first (3 khối dọc: camera · mặt bàn · bảng điều khiển)
-  data/npcs.json       23 nhân vật viết tay (17 cố định + 6 khách quen theo hậu quả)
+  data/npcs.json       38 nhân vật viết tay: chương 1 (17 + 7 khách quen), chương 2 (11 nhân vật + trùm & 2 nghi phạm)
   js/main.js           Vòng lặp game, UI, đóng dấu, ban đêm, kết thúc
   js/rules.js          Quy tắc ngày, checkRules(), evaluateDecision() — chấm điểm bằng code, không dùng AI
   js/economy.js        Ca trực, gia đình & chi tiêu, cửa hàng, thanh tra nội bộ, tít báo sáng
@@ -69,6 +72,7 @@ public/
 
 Thêm một object vào `public/data/npcs.json` theo mẫu có sẵn. Các trường chính:
 
+- `chapter` (mặc định 1), `requires` / `excludes`: `[{ "npc": "npc_001", "decisions": ["ARREST"] }]` — chỉ xuất hiện khi các quyết định trước đó khớp / không khớp. `fixedDay`: ép đúng ngày. `network: true`: bắt đúng người này được manh mối Hắc Long; `clueOn: ["ALLOW"]`: cho qua thì người này kể manh mối.
 - `minDay`: ngày sớm nhất được xuất hiện (1–5). Mỗi ván game tự xếp ngẫu nhiên nhân vật vào các ngày ≥ `minDay`. **Hoặc** `follow`: `{ "after": "npc_001", "decisions": ["ALLOW"], "delay": 2 }` — chỉ xuất hiện `delay` ngày sau khi người chơi chọn một trong `decisions` với nhân vật `after`.
 - `crime`: `null` | `"CONTRABAND"` | `"FORGERY"` | `"WANTED"` (kèm `wanted` để hiện trên lệnh truy nã).
 - `documents`: `passport`, `entry_permit`, `customs`, tùy chọn `work_permit`. Giấy tờ giả = cố ý cho lệch họ tên/số HC/ngày sinh so với hộ chiếu.
